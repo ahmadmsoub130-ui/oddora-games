@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ODDORA GAMES</title>
+  <meta name="description" content="ODDORA Games - ألعاب مجانية ممتعة للجميع">
+  <title>ODDORA Games</title>
 
   <style>
     * {
@@ -14,148 +15,227 @@
 
     body {
       font-family: Arial, sans-serif;
-      background: #080b16;
+      background:
+        radial-gradient(circle at top, #172554 0%, #070b18 45%, #02040b 100%);
       color: white;
       min-height: 100vh;
     }
 
     header {
-      padding: 25px 6%;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(15px);
+      background: rgba(3, 7, 18, 0.82);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .nav {
+      max-width: 1200px;
+      margin: auto;
+      padding: 18px 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: #10152a;
-      border-bottom: 1px solid #252c4a;
     }
 
     .logo {
-      font-size: 28px;
-      font-weight: bold;
+      font-size: 27px;
+      font-weight: 900;
       letter-spacing: 2px;
+      color: #7dd3fc;
+      text-shadow: 0 0 20px rgba(56,189,248,.7);
     }
 
-    nav a {
+    .nav button {
+      border: 0;
+      padding: 10px 18px;
+      border-radius: 25px;
+      background: linear-gradient(135deg,#38bdf8,#6366f1);
       color: white;
-      text-decoration: none;
-      margin: 0 10px;
-      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
     }
 
     .hero {
-      padding: 80px 6%;
+      max-width: 1200px;
+      margin: auto;
+      padding: 75px 20px 45px;
       text-align: center;
-      background:
-        radial-gradient(circle at top, #29347a, transparent 45%),
-        #080b16;
     }
 
     .hero h1 {
-      font-size: clamp(42px, 8vw, 80px);
+      font-size: clamp(45px, 10vw, 90px);
+      font-weight: 900;
+      background: linear-gradient(90deg,#38bdf8,#a78bfa,#f472b6);
+      -webkit-background-clip: text;
+      color: transparent;
       margin-bottom: 15px;
     }
 
     .hero p {
-      color: #b8bfdc;
-      font-size: 18px;
-      margin-bottom: 30px;
-    }
-
-    .button {
-      display: inline-block;
-      padding: 14px 28px;
-      border-radius: 12px;
-      background: #6c63ff;
-      color: white;
-      text-decoration: none;
-      font-weight: bold;
+      color: #cbd5e1;
+      font-size: 19px;
+      max-width: 650px;
+      margin: auto;
+      line-height: 1.8;
     }
 
     .games {
-      padding: 45px 6%;
+      max-width: 1200px;
+      margin: auto;
+      padding: 20px;
     }
 
-    .games h2 {
+    .section-title {
+      font-size: 28px;
       margin-bottom: 25px;
-      font-size: 30px;
     }
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 20px;
+      grid-template-columns: repeat(auto-fit,minmax(250px,1fr));
+      gap: 22px;
     }
 
     .card {
-      background: #11172b;
-      border: 1px solid #252c4a;
-      border-radius: 18px;
+      background: rgba(15,23,42,.75);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 22px;
       padding: 25px;
-      transition: 0.2s;
+      min-height: 240px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: 0 15px 40px rgba(0,0,0,.25);
+      transition: .25s;
     }
 
     .card:hover {
-      transform: translateY(-5px);
-      border-color: #6c63ff;
+      transform: translateY(-7px);
+      border-color: rgba(56,189,248,.6);
+      box-shadow: 0 20px 50px rgba(14,165,233,.15);
     }
 
-    .game-icon {
+    .icon {
       font-size: 55px;
       margin-bottom: 15px;
     }
 
     .card h3 {
-      margin-bottom: 10px;
+      font-size: 23px;
+      margin-bottom: 8px;
     }
 
     .card p {
-      color: #9da5c7;
-      margin-bottom: 20px;
+      color: #94a3b8;
       line-height: 1.6;
     }
 
     .play {
-      border: 0;
+      margin-top: 20px;
       width: 100%;
-      padding: 12px;
-      border-radius: 10px;
-      background: #6c63ff;
+      padding: 13px;
+      border: 0;
+      border-radius: 14px;
+      background: linear-gradient(135deg,#2563eb,#7c3aed);
       color: white;
       font-size: 16px;
       font-weight: bold;
       cursor: pointer;
     }
 
-    footer {
-      text-align: center;
-      padding: 35px;
-      color: #777f9f;
-      border-top: 1px solid #202640;
-      margin-top: 30px;
+    .play:hover {
+      filter: brightness(1.15);
     }
 
-    #gameArea {
+    .game-area {
       display: none;
-      padding: 30px 6%;
+      max-width: 900px;
+      margin: 30px auto;
+      padding: 20px;
+    }
+
+    .game-box {
+      background: rgba(15,23,42,.9);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 25px;
+      padding: 30px;
       text-align: center;
     }
 
-    #gameBox {
-      max-width: 500px;
-      margin: 20px auto;
-      padding: 35px;
-      background: #11172b;
-      border-radius: 18px;
-      border: 1px solid #252c4a;
+    .back {
+      border: 0;
+      background: #334155;
+      color: white;
+      padding: 10px 18px;
+      border-radius: 12px;
+      cursor: pointer;
+      margin-bottom: 20px;
     }
 
-    #number {
-      font-size: 70px;
+    #gameTitle {
+      font-size: 32px;
+      margin-bottom: 20px;
+    }
+
+    .score {
+      font-size: 22px;
+      margin: 15px;
+      color: #7dd3fc;
+    }
+
+    .big-button {
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      border: 0;
+      background: linear-gradient(135deg,#06b6d4,#6366f1);
+      color: white;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 0 45px rgba(59,130,246,.4);
       margin: 25px;
     }
 
-    .close {
-      background: #333b5c;
-      margin-top: 10px;
+    .big-button:active {
+      transform: scale(.94);
+    }
+
+    .number {
+      font-size: 70px;
+      font-weight: 900;
+      margin: 20px;
+      color: #f472b6;
+    }
+
+    .answer {
+      padding: 13px 22px;
+      margin: 6px;
+      border: 0;
+      border-radius: 12px;
+      background: #1e293b;
+      color: white;
+      cursor: pointer;
+      font-size: 17px;
+    }
+
+    footer {
+      text-align: center;
+      color: #64748b;
+      padding: 50px 20px 30px;
+      margin-top: 40px;
+    }
+
+    @media(max-width:600px) {
+      .hero {
+        padding-top: 50px;
+      }
+
+      .card {
+        min-height: 220px;
+      }
     }
   </style>
 </head>
@@ -163,190 +243,314 @@
 <body>
 
 <header>
-  <div class="logo">ODDORA</div>
-
-  <nav>
-    <a href="#games">الألعاب</a>
-    <a href="#about">عن الموقع</a>
-  </nav>
+  <div class="nav">
+    <div class="logo">ODDORA</div>
+    <button onclick="scrollToGames()">الألعاب</button>
+  </div>
 </header>
 
 <section class="hero">
   <h1>ODDORA GAMES</h1>
-  <p>ألعاب بسيطة وسريعة وممتعة للجميع</p>
-  <a class="button" href="#games">ابدأ اللعب</a>
+  <p>
+    عالم ألعاب مجاني وسريع وممتع.
+    العب من هاتفك أو الكمبيوتر بدون تحميل.
+  </p>
 </section>
 
 <section class="games" id="games">
-  <h2>الألعاب</h2>
+  <h2 class="section-title">🎮 الألعاب</h2>
 
   <div class="grid">
 
     <div class="card">
-      <div class="game-icon">🎯</div>
-      <h3>اختبار السرعة</h3>
-      <p>اضغط بأسرع ما تستطيع وسجل أفضل نتيجة.</p>
-      <button class="play" onclick="startSpeedGame()">العب الآن</button>
+      <div>
+        <div class="icon">⚡</div>
+        <h3>اضغط بسرعة</h3>
+        <p>كم مرة تستطيع الضغط خلال الوقت المحدد؟</p>
+      </div>
+      <button class="play" onclick="startGame('clicker')">
+        العب الآن
+      </button>
     </div>
 
     <div class="card">
-      <div class="game-icon">🔢</div>
-      <h3>خمن الرقم</h3>
-      <p>حاول معرفة الرقم السري بأقل عدد من المحاولات.</p>
-      <button class="play" onclick="startGuessGame()">العب الآن</button>
+      <div>
+        <div class="icon">🧠</div>
+        <h3>اختبار الرقم</h3>
+        <p>اختر الإجابة الصحيحة واختبر سرعة عقلك.</p>
+      </div>
+      <button class="play" onclick="startGame('math')">
+        العب الآن
+      </button>
     </div>
 
     <div class="card">
-      <div class="game-icon">🧠</div>
-      <h3>تحدي الذاكرة</h3>
-      <p>اختبر ذاكرتك وحاول الوصول إلى أعلى نتيجة.</p>
-      <button class="play" onclick="startMemoryGame()">العب الآن</button>
+      <div>
+        <div class="icon">🎯</div>
+        <h3>خمن الرقم</h3>
+        <p>هل تستطيع معرفة الرقم السري؟</p>
+      </div>
+      <button class="play" onclick="startGame('guess')">
+        العب الآن
+      </button>
     </div>
 
   </div>
 </section>
 
-<section id="gameArea">
-  <div id="gameBox"></div>
-</section>
+<section class="game-area" id="gameArea">
 
-<section class="games" id="about">
-  <h2>عن ODDORA</h2>
-  <p style="color:#9da5c7;line-height:1.8;">
-    ODDORA منصة ألعاب ويب نعمل على تطويرها لتصبح مكانًا
-    يجمع ألعابًا سريعة وممتعة للاعبين من مختلف الدول.
-  </p>
+  <div class="game-box">
+
+    <button class="back" onclick="closeGame()">
+      ← العودة للألعاب
+    </button>
+
+    <h2 id="gameTitle"></h2>
+
+    <div id="gameContent"></div>
+
+  </div>
+
 </section>
 
 <footer>
-  © 2026 ODDORA GAMES
+  © 2026 ODDORA Games — جميع الحقوق محفوظة
 </footer>
 
 <script>
 
-function showGame(html) {
-  const area = document.getElementById("gameArea");
-  const box = document.getElementById("gameBox");
+let timer;
+let score = 0;
+let secretNumber = 0;
 
-  box.innerHTML = html;
-  area.style.display = "block";
-  area.scrollIntoView({ behavior: "smooth" });
+function scrollToGames() {
+  document.getElementById("games").scrollIntoView({
+    behavior: "smooth"
+  });
+}
+
+function startGame(type) {
+
+  document.getElementById("games").style.display = "none";
+  document.getElementById("gameArea").style.display = "block";
+
+  if (type === "clicker") {
+    clickerGame();
+  }
+
+  if (type === "math") {
+    mathGame();
+  }
+
+  if (type === "guess") {
+    guessGame();
+  }
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
 }
 
 function closeGame() {
+
+  clearInterval(timer);
+
   document.getElementById("gameArea").style.display = "none";
+  document.getElementById("games").style.display = "block";
+
+  scrollToGames();
 }
 
-function startSpeedGame() {
+function clickerGame() {
 
-  showGame(`
-    <h2>اختبار السرعة</h2>
-    <p>انتظر حتى يظهر "اضغط!" ثم اضغط بسرعة.</p>
-    <div id="speedText" style="font-size:35px;margin:30px;">انتظر...</div>
-    <button class="play" id="speedButton" disabled>اضغط!</button>
-    <button class="play close" onclick="closeGame()">إغلاق</button>
-  `);
+  clearInterval(timer);
 
-  const text = document.getElementById("speedText");
-  const button = document.getElementById("speedButton");
+  score = 0;
+  let time = 10;
 
-  const delay = Math.floor(Math.random() * 3000) + 2000;
+  document.getElementById("gameTitle").innerText =
+    "⚡ اضغط بسرعة";
 
-  setTimeout(() => {
-    text.textContent = "اضغط!";
-    button.disabled = false;
+  document.getElementById("gameContent").innerHTML = `
 
-    const start = Date.now();
+    <div class="score">
+      النقاط: <span id="score">0</span>
+    </div>
+
+    <div class="score">
+      الوقت: <span id="time">10</span>
+    </div>
+
+    <button class="big-button" id="clickButton">
+      اضغط!
+    </button>
+
+    <p id="result"></p>
+  `;
+
+  document.getElementById("clickButton").onclick = function() {
+
+    if (time > 0) {
+      score++;
+      document.getElementById("score").innerText = score;
+    }
+
+  };
+
+  timer = setInterval(function() {
+
+    time--;
+
+    document.getElementById("time").innerText = time;
+
+    if (time <= 0) {
+
+      clearInterval(timer);
+
+      document.getElementById("clickButton").disabled = true;
+
+      document.getElementById("result").innerHTML =
+        "<h3>انتهى الوقت!</h3><p>نتيجتك: " +
+        score +
+        " نقطة</p>";
+    }
+
+  },1000);
+}
+
+function mathGame() {
+
+  let a = Math.floor(Math.random() * 20) + 1;
+  let b = Math.floor(Math.random() * 20) + 1;
+
+  let correct = a + b;
+
+  let answers = [
+    correct,
+    correct + Math.floor(Math.random()*6)+1,
+    correct - Math.floor(Math.random()*5)-1,
+    correct + 10
+  ];
+
+  answers.sort(() => Math.random() - .5);
+
+  document.getElementById("gameTitle").innerText =
+    "🧠 اختبار الرقم";
+
+  document.getElementById("gameContent").innerHTML = `
+
+    <div class="number">
+      ${a} + ${b} = ?
+    </div>
+
+    <div id="answers"></div>
+
+    <p id="mathResult"></p>
+  `;
+
+  const box = document.getElementById("answers");
+
+  answers.forEach(function(answer) {
+
+    const button = document.createElement("button");
+
+    button.className = "answer";
+    button.innerText = answer;
 
     button.onclick = function() {
-      const time = Date.now() - start;
-      text.textContent = "نتيجتك: " + time + " ms";
-      button.disabled = true;
+
+      if (answer === correct) {
+
+        document.getElementById("mathResult").innerHTML =
+          "✅ إجابة صحيحة!";
+
+      } else {
+
+        document.getElementById("mathResult").innerHTML =
+          "❌ إجابة خاطئة. الرقم الصحيح هو " + correct;
+      }
+
     };
 
-  }, delay);
+    box.appendChild(button);
+
+  });
 }
 
-function startGuessGame() {
+function guessGame() {
 
-  const secret = Math.floor(Math.random() * 100) + 1;
+  secretNumber = Math.floor(Math.random() * 100) + 1;
 
-  showGame(`
-    <h2>خمن الرقم</h2>
-    <p>اختر رقمًا من 1 إلى 100</p>
+  document.getElementById("gameTitle").innerText =
+    "🎯 خمن الرقم";
+
+  document.getElementById("gameContent").innerHTML = `
+
+    <p>
+      اختر رقمًا بين 1 و100
+    </p>
 
     <input
       id="guessInput"
       type="number"
       min="1"
       max="100"
-      style="padding:14px;width:100%;margin:20px 0;border-radius:10px;border:0;font-size:18px;"
+      placeholder="اكتب الرقم"
+      style="
+        padding:14px;
+        border-radius:12px;
+        border:0;
+        margin:20px;
+        width:200px;
+        text-align:center;
+        font-size:18px;
+      "
     >
 
-    <button class="play" onclick="checkGuess(${secret})">
-      تخمين
+    <br>
+
+    <button
+      class="play"
+      style="max-width:250px"
+      onclick="checkGuess()"
+    >
+      تحقق
     </button>
 
-    <div id="guessResult" style="margin:20px;font-size:20px;"></div>
-
-    <button class="play close" onclick="closeGame()">إغلاق</button>
-  `);
+    <p id="guessResult" style="margin-top:20px"></p>
+  `;
 }
 
-function checkGuess(secret) {
+function checkGuess() {
 
-  const input = document.getElementById("guessInput");
-  const result = document.getElementById("guessResult");
+  const value =
+    Number(document.getElementById("guessInput").value);
 
-  const value = Number(input.value);
+  const result =
+    document.getElementById("guessResult");
 
   if (!value) {
-    result.textContent = "اكتب رقمًا أولًا.";
+    result.innerText = "اكتب رقمًا أولًا.";
     return;
   }
 
-  if (value === secret) {
-    result.textContent = "أحسنت! لقد وجدت الرقم.";
-  } else if (value < secret) {
-    result.textContent = "الرقم أكبر.";
+  if (value === secretNumber) {
+
+    result.innerHTML =
+      "🎉 ممتاز! لقد وجدت الرقم السري!";
+
+  } else if (value < secretNumber) {
+
+    result.innerText =
+      "الرقم السري أكبر.";
+
   } else {
-    result.textContent = "الرقم أصغر.";
+
+    result.innerText =
+      "الرقم السري أصغر.";
   }
-}
-
-function startMemoryGame() {
-
-  showGame(`
-    <h2>تحدي الذاكرة</h2>
-    <p>احفظ الرقم الذي سيظهر أمامك.</p>
-
-    <div id="number">---</div>
-
-    <button class="play" onclick="memoryStart()">ابدأ</button>
-
-    <button class="play close" onclick="closeGame()">إغلاق</button>
-  `);
-}
-
-function memoryStart() {
-
-  const number = Math.floor(Math.random() * 9000) + 1000;
-
-  document.getElementById("number").textContent = number;
-
-  setTimeout(() => {
-
-    document.getElementById("number").textContent = "؟";
-
-    const answer = prompt("ما الرقم الذي ظهر؟");
-
-    if (answer == number) {
-      alert("إجابة صحيحة!");
-    } else {
-      alert("إجابة خاطئة. الرقم كان: " + number);
-    }
-
-  }, 2000);
 }
 
 </script>
