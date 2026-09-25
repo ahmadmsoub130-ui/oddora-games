@@ -3,257 +3,420 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ODDORA GAMES</title>
+<meta name="theme-color" content="#080b18">
+
+<title>ODDORA Games 🇯🇴 | ألعاب أردنية مجانية</title>
+
+<meta name="description" content="ODDORA Games - منصة ألعاب مجانية تضم ألعابًا أردنية أصلية وألعاب تحدي وذاكرة وتخمين.">
+<meta name="keywords" content="العاب, العاب اردنية, العاب مجانية, ODDORA, العاب موبايل, الأردن">
 
 <style>
-*{
-  box-sizing:border-box;
-  margin:0;
-  padding:0;
-}
+*{box-sizing:border-box;margin:0;padding:0}
 
 body{
-  font-family:Arial,sans-serif;
-  background:#070914;
-  color:#fff;
-  min-height:100vh;
+font-family:Arial,Tahoma,sans-serif;
+background:
+radial-gradient(circle at 20% 10%,#39206d55,transparent 30%),
+radial-gradient(circle at 80% 20%,#007c8750,transparent 30%),
+#070914;
+color:#fff;
+min-height:100vh;
 }
 
-header{
-  position:sticky;
-  top:0;
-  z-index:100;
-  padding:18px 6%;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  background:rgba(10,13,30,.92);
-  backdrop-filter:blur(12px);
-  border-bottom:1px solid #252a4a;
-}
-
-.logo{
-  font-size:27px;
-  font-weight:900;
-  letter-spacing:3px;
-}
-
-.logo span{
-  color:#756cff;
-}
-
-nav{
-  display:flex;
-  gap:18px;
-}
-
-nav a{
-  color:#cbd0e8;
-  text-decoration:none;
-  font-size:14px;
-}
-
-.hero{
-  padding:90px 6% 70px;
-  text-align:center;
-  background:
-    radial-gradient(circle at 50% 0,#303a9c55,transparent 45%),
-    #070914;
-}
-
-.badge{
-  display:inline-block;
-  padding:8px 14px;
-  border:1px solid #353c70;
-  border-radius:30px;
-  color:#9fa7ff;
-  margin-bottom:20px;
-  font-size:13px;
-}
-
-.hero h1{
-  font-size:clamp(45px,10vw,90px);
-  line-height:1;
-  margin-bottom:20px;
-}
-
-.hero h1 span{
-  color:#756cff;
-}
-
-.hero p{
-  max-width:650px;
-  margin:auto;
-  color:#aeb5d2;
-  font-size:18px;
-  line-height:1.8;
-}
-
-.start{
-  display:inline-block;
-  margin-top:30px;
-  padding:15px 30px;
-  border-radius:14px;
-  background:#756cff;
-  color:white;
-  text-decoration:none;
-  font-weight:bold;
-  box-shadow:0 10px 35px #756cff33;
+button{
+font-family:inherit;
+cursor:pointer;
+border:0;
 }
 
 .container{
-  width:88%;
-  max-width:1200px;
-  margin:auto;
+width:min(1100px,94%);
+margin:auto;
 }
 
-.section{
-  padding:55px 0;
+header{
+position:sticky;
+top:0;
+z-index:100;
+background:#080b18eF;
+backdrop-filter:blur(15px);
+border-bottom:1px solid #ffffff12;
+}
+
+.nav{
+height:70px;
+display:flex;
+align-items:center;
+justify-content:space-between;
+}
+
+.logo{
+font-size:25px;
+font-weight:900;
+letter-spacing:2px;
+background:linear-gradient(90deg,#a855f7,#22d3ee);
+-webkit-background-clip:text;
+color:transparent;
+}
+
+.nav button{
+background:#ffffff0d;
+color:white;
+padding:10px 15px;
+border-radius:12px;
+}
+
+.hero{
+text-align:center;
+padding:55px 15px 35px;
+}
+
+.badge{
+display:inline-block;
+background:#ffffff0b;
+border:1px solid #ffffff15;
+padding:8px 14px;
+border-radius:30px;
+margin-bottom:18px;
+color:#cbd5e1;
+}
+
+.hero h1{
+font-size:clamp(38px,8vw,72px);
+line-height:1;
+margin-bottom:18px;
+}
+
+.gradient{
+background:linear-gradient(90deg,#c084fc,#22d3ee);
+-webkit-background-clip:text;
+color:transparent;
+}
+
+.hero p{
+max-width:650px;
+margin:auto;
+color:#aeb7ca;
+font-size:17px;
+line-height:1.8;
+}
+
+.ad{
+margin:20px auto;
+min-height:90px;
+max-width:970px;
+border:1px dashed #ffffff18;
+border-radius:18px;
+display:flex;
+align-items:center;
+justify-content:center;
+color:#697386;
+font-size:13px;
 }
 
 .section-title{
-  font-size:30px;
-  margin-bottom:10px;
+font-size:28px;
+margin:35px 0 18px;
 }
 
-.section-sub{
-  color:#858da9;
-  margin-bottom:30px;
-}
-
-.grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
-  gap:20px;
+.games{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+gap:18px;
 }
 
 .card{
-  background:linear-gradient(145deg,#11162b,#0d1122);
-  border:1px solid #252b4b;
-  border-radius:20px;
-  padding:25px;
-  transition:.25s;
+background:linear-gradient(145deg,#15192b,#0e1120);
+border:1px solid #ffffff12;
+border-radius:22px;
+padding:23px;
+transition:.25s;
+box-shadow:0 15px 40px #00000025;
 }
 
 .card:hover{
-  transform:translateY(-6px);
-  border-color:#756cff;
-  box-shadow:0 15px 40px #0008;
+transform:translateY(-5px);
+border-color:#8b5cf655;
 }
 
-.icon{
-  width:70px;
-  height:70px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:40px;
-  background:#1a2040;
-  border-radius:18px;
-  margin-bottom:20px;
+.card .icon{
+font-size:42px;
+margin-bottom:15px;
 }
 
 .card h3{
-  font-size:21px;
-  margin-bottom:10px;
+margin-bottom:8px;
 }
 
 .card p{
-  color:#8f97b5;
-  line-height:1.7;
-  min-height:50px;
-  margin-bottom:20px;
+color:#929caf;
+line-height:1.6;
+font-size:14px;
 }
 
 .play{
-  width:100%;
-  border:0;
-  padding:13px;
-  border-radius:12px;
-  background:#756cff;
-  color:white;
-  font-size:16px;
-  font-weight:bold;
-  cursor:pointer;
+width:100%;
+margin-top:18px;
+padding:13px;
+border-radius:13px;
+background:linear-gradient(90deg,#7c3aed,#0891b2);
+color:#fff;
+font-size:16px;
+font-weight:bold;
 }
 
-.play:hover{
-  filter:brightness(1.12);
+.jordan-card{
+grid-column:1/-1;
+background:
+linear-gradient(135deg,#1d1238,#071b2a);
+border:1px solid #a855f744;
 }
 
-.game-area{
-  display:none;
-  padding:30px 0 60px;
+.jordan-card h3{
+font-size:25px;
 }
 
-.game-box{
-  max-width:600px;
-  margin:auto;
-  background:#10162b;
-  border:1px solid #292f50;
-  border-radius:22px;
-  padding:30px;
-  text-align:center;
+.jordan-card p{
+font-size:15px;
 }
 
-.game-box h2{
-  margin-bottom:12px;
+.modal{
+display:none;
+position:fixed;
+inset:0;
+z-index:200;
+background:#000000c9;
+padding:15px;
+overflow:auto;
 }
 
-.game-box p{
-  color:#9ba3c0;
-  line-height:1.7;
+.modal.show{
+display:flex;
+align-items:center;
+justify-content:center;
 }
 
-.big-number{
-  font-size:65px;
-  font-weight:900;
-  margin:25px;
-  color:#8b84ff;
-}
-
-input{
-  width:100%;
-  padding:14px;
-  border:1px solid #303758;
-  background:#080b18;
-  color:white;
-  border-radius:12px;
-  font-size:18px;
-  outline:none;
-  margin:20px 0;
+.modal-box{
+width:min(950px,100%);
+max-height:94vh;
+overflow:auto;
+background:#0d1020;
+border:1px solid #ffffff15;
+border-radius:25px;
+padding:20px;
+position:relative;
 }
 
 .close{
-  background:#303752;
-  margin-top:10px;
+position:absolute;
+left:15px;
+top:15px;
+width:38px;
+height:38px;
+border-radius:50%;
+background:#ffffff10;
+color:#fff;
+font-size:20px;
 }
 
-.result{
-  margin:20px 0;
-  font-size:20px;
-  min-height:30px;
+.game-title{
+text-align:center;
+font-size:27px;
+margin:5px 0 15px;
+}
+
+.game-area{
+background:#080b16;
+border-radius:20px;
+padding:20px;
+min-height:250px;
+}
+
+.game-message{
+text-align:center;
+color:#cbd5e1;
+margin:15px 0;
+min-height:25px;
+}
+
+.input{
+width:100%;
+padding:14px;
+border-radius:12px;
+background:#151a2c;
+border:1px solid #ffffff15;
+color:white;
+font-size:16px;
+margin:10px 0;
+outline:none;
+}
+
+.stats{
+display:flex;
+gap:10px;
+flex-wrap:wrap;
+justify-content:center;
+margin:15px 0;
+}
+
+.stat{
+background:#ffffff0b;
+border:1px solid #ffffff12;
+padding:10px 15px;
+border-radius:12px;
+}
+
+.small-btn{
+padding:11px 16px;
+border-radius:11px;
+background:#7c3aed;
+color:#fff;
+font-weight:bold;
+margin:4px;
+}
+
+.secondary{
+background:#ffffff10;
+}
+
+/* Jordan board */
+
+.board{
+display:grid;
+grid-template-columns:repeat(6,1fr);
+gap:7px;
+margin:15px auto;
+max-width:720px;
+}
+
+.cell{
+min-height:82px;
+border-radius:10px;
+padding:6px;
+background:#151a2b;
+border:1px solid #ffffff12;
+font-size:11px;
+display:flex;
+flex-direction:column;
+justify-content:space-between;
+}
+
+.cell.property{
+background:linear-gradient(145deg,#182342,#111629);
+}
+
+.cell.special{
+background:linear-gradient(145deg,#30204d,#172032);
+}
+
+.cell.start{
+background:linear-gradient(145deg,#064e3b,#12372d);
+}
+
+.cell-name{
+font-weight:bold;
+}
+
+.price{
+color:#67e8f9;
+}
+
+.tokens{
+font-size:20px;
+min-height:23px;
+}
+
+.player-token{
+filter:drop-shadow(0 0 5px #22d3ee);
+}
+
+.bot-token{
+filter:drop-shadow(0 0 5px #fb7185);
+}
+
+.owner{
+font-size:9px;
+color:#a5b4fc;
+}
+
+.jordan-controls{
+text-align:center;
+}
+
+.dice{
+font-size:55px;
+text-align:center;
+margin:5px;
+}
+
+.leaderboard{
+display:grid;
+gap:8px;
+margin-top:15px;
+}
+
+.rank{
+background:#ffffff08;
+padding:10px;
+border-radius:10px;
+display:flex;
+justify-content:space-between;
 }
 
 footer{
-  border-top:1px solid #202640;
-  padding:35px 6%;
-  text-align:center;
-  color:#69718d;
+margin-top:55px;
+border-top:1px solid #ffffff10;
+padding:30px 0;
+color:#788398;
+text-align:center;
+line-height:2;
+}
+
+footer button{
+background:none;
+color:#9ca3af;
+margin:5px;
+}
+
+.page{
+display:none;
+}
+
+.page.show{
+display:block;
+}
+
+.info-page{
+padding:40px 0;
+max-width:800px;
+margin:auto;
+}
+
+.info-page h1{
+margin-bottom:20px;
+}
+
+.info-page h2{
+margin:25px 0 10px;
+}
+
+.info-page p{
+color:#aeb7ca;
+line-height:1.9;
 }
 
 @media(max-width:600px){
-  nav{
-    gap:10px;
-  }
-
-  nav a{
-    font-size:12px;
-  }
-
-  .hero{
-    padding-top:65px;
-  }
+.hero{padding-top:40px}
+.board{
+grid-template-columns:repeat(4,1fr);
+}
+.cell{
+min-height:75px;
+font-size:10px;
+}
+.modal-box{
+padding:15px;
+}
 }
 </style>
 </head>
@@ -261,350 +424,978 @@ footer{
 <body>
 
 <header>
-  <div class="logo">ODD<span>ORA</span></div>
-
-  <nav>
-    <a href="#games">الألعاب</a>
-    <a href="#about">عن الموقع</a>
-  </nav>
+<div class="container nav">
+<div class="logo">ODDORA</div>
+<button onclick="scrollToGames()">🎮 الألعاب</button>
+</div>
 </header>
 
+<main id="home" class="page show">
+
 <section class="hero">
+<div class="badge">🇯🇴 منصة ألعاب أردنية مستقلة</div>
 
-  <div class="badge">WELCOME TO ODDORA</div>
+<h1>
+العب.<br>
+<span class="gradient">نافس.</span>
+استمتع.
+</h1>
 
-  <h1>
-    ODD<span>ORA</span><br>
-    GAMES
-  </h1>
-
-  <p>
-    منصة ألعاب سريعة وممتعة للجميع.
-    العب، تحدَّ نفسك، وحاول تسجيل أعلى نتيجة.
-  </p>
-
-  <a class="start" href="#games">ابدأ اللعب</a>
-
+<p>
+مرحبًا بك في ODDORA Games — ألعاب مجانية تعمل مباشرة من المتصفح،
+مصممة للموبايل والكمبيوتر.
+</p>
 </section>
 
-<section class="section" id="games">
-
 <div class="container">
+<div class="ad">
+مساحة إعلانية — جاهزة للربط بشبكة إعلانات لاحقًا
+</div>
 
-  <h2 class="section-title">الألعاب</h2>
+<h2 class="section-title" id="games">🎮 ألعاب ODDORA</h2>
 
-  <p class="section-sub">
-    اختر لعبة وابدأ التحدي.
-  </p>
+<div class="games">
 
-  <div class="grid">
+<div class="card jordan-card">
+<div class="icon">🇯🇴🏙️</div>
+<h3>رحلة العقارات الأردنية</h3>
+<p>
+لعبة استراتيجية أصلية مستوحاة من ألعاب شراء العقارات:
+تحرك بالنرد، اشترِ المواقع، اجمع الإيجارات، وحاول أن تصبح صاحب
+أكبر إمبراطورية داخل عالم ODDORA.
+</p>
+<button class="play" onclick="openJordanGame()">ابدأ اللعبة</button>
+</div>
 
-    <div class="card">
+<div class="card">
+<div class="icon">⚡</div>
+<h3>اختبار السرعة</h3>
+<p>اختبر سرعة رد فعلك واضغط في اللحظة المناسبة.</p>
+<button class="play" onclick="openSpeed()">العب الآن</button>
+</div>
 
-      <div class="icon">⚡</div>
+<div class="card">
+<div class="icon">🔢</div>
+<h3>خمن الرقم</h3>
+<p>حاول اكتشاف الرقم السري بأقل عدد من المحاولات.</p>
+<button class="play" onclick="openGuess()">العب الآن</button>
+</div>
 
-      <h3>اختبار السرعة</h3>
-
-      <p>
-        اختبر سرعة رد فعلك وسجل أفضل وقت.
-      </p>
-
-      <button class="play" onclick="speedGame()">
-        العب الآن
-      </button>
-
-    </div>
-
-    <div class="card">
-
-      <div class="icon">🔢</div>
-
-      <h3>خمن الرقم</h3>
-
-      <p>
-        حاول اكتشاف الرقم السري من 1 إلى 100.
-      </p>
-
-      <button class="play" onclick="guessGame()">
-        العب الآن
-      </button>
-
-    </div>
-
-    <div class="card">
-
-      <div class="icon">🧠</div>
-
-      <h3>تحدي الذاكرة</h3>
-
-      <p>
-        احفظ الرقم وحاول تذكره بعد اختفائه.
-      </p>
-
-      <button class="play" onclick="memoryGame()">
-        العب الآن
-      </button>
-
-    </div>
-
-  </div>
+<div class="card">
+<div class="icon">🧠</div>
+<h3>تحدي الذاكرة</h3>
+<p>اختبر ذاكرتك وحاول إيجاد الأزواج المتطابقة.</p>
+<button class="play" onclick="openMemory()">العب الآن</button>
+</div>
 
 </div>
 
-</section>
-
-<section class="game-area" id="gameArea">
-
-<div class="container">
-
-  <div class="game-box" id="gameBox"></div>
+<div class="ad">
+مساحة إعلانية ثانية
+</div>
 
 </div>
 
-</section>
+</main>
 
-<section class="section" id="about">
+<!-- MODAL -->
 
-<div class="container">
-
-  <h2 class="section-title">عن ODDORA</h2>
-
-  <p class="section-sub">
-    ODDORA مشروع ألعاب ويب يهدف إلى بناء منصة ممتعة
-    وسريعة يستطيع اللاعبون من مختلف الدول استخدامها بسهولة.
-  </p>
-
+<div class="modal" id="gameModal">
+<div class="modal-box">
+<button class="close" onclick="closeGame()">×</button>
+<div id="gameContent"></div>
 </div>
-
-</section>
+</div>
 
 <footer>
-  © 2026 ODDORA GAMES — All Rights Reserved
+<div class="container">
+<strong>ODDORA Games</strong>
+<br>
+ألعاب مجانية من الأردن إلى العالم 🌍
+<br>
+<button onclick="showInfo('privacy')">الخصوصية</button>
+<button onclick="showInfo('terms')">الشروط</button>
+<button onclick="showInfo('about')">عن ODDORA</button>
+</div>
 </footer>
 
 <script>
 
-function showGame(content){
+/* =========================
+   GENERAL
+========================= */
 
-  const area=document.getElementById("gameArea");
-  const box=document.getElementById("gameBox");
+const modal=document.getElementById("gameModal");
+const content=document.getElementById("gameContent");
 
-  box.innerHTML=content;
-
-  area.style.display="block";
-
-  area.scrollIntoView({
-    behavior:"smooth"
-  });
+function openGame(html){
+content.innerHTML=html;
+modal.classList.add("show");
 }
 
 function closeGame(){
+modal.classList.remove("show");
+content.innerHTML="";
+}
 
-  document.getElementById("gameArea").style.display="none";
+function scrollToGames(){
+document.getElementById("games").scrollIntoView({behavior:"smooth"});
+}
+
+modal.addEventListener("click",function(e){
+if(e.target===modal) closeGame();
+});
+
+
+/* =========================
+   SPEED GAME
+========================= */
+
+let speedTimer=null;
+let speedStart=0;
+let speedReady=false;
+
+function openSpeed(){
+
+openGame(`
+<div class="game-title">⚡ اختبار السرعة</div>
+
+<div class="game-area">
+<div class="game-message" id="speedMsg">
+اضغط "ابدأ"، ثم انتظر حتى تتغير الشاشة واضغط بأسرع ما تستطيع.
+</div>
+
+<div style="text-align:center">
+<button class="small-btn" id="speedBtn" onclick="speedStartGame()">ابدأ</button>
+</div>
+
+<div class="stats">
+<div class="stat">أفضل نتيجة: <span id="bestSpeed">--</span> ms</div>
+</div>
+</div>
+`);
+
+let best=localStorage.getItem("oddoraBestSpeed");
+if(best) document.getElementById("bestSpeed").textContent=best;
+}
+
+function speedStartGame(){
+
+const btn=document.getElementById("speedBtn");
+const msg=document.getElementById("speedMsg");
+
+btn.disabled=true;
+btn.textContent="انتظر...";
+msg.textContent="استعد...";
+
+speedReady=false;
+
+let delay=1500+Math.random()*3500;
+
+speedTimer=setTimeout(()=>{
+
+speedReady=true;
+speedStart=performance.now();
+
+btn.disabled=false;
+btn.textContent="اضغط الآن!";
+btn.style.background="#16a34a";
+msg.textContent="اضغط!";
+
+},delay);
+}
+
+document.addEventListener("click",function(e){
+
+if(!speedReady)return;
+
+if(e.target.id==="speedBtn"){
+
+let result=Math.round(performance.now()-speedStart);
+
+speedReady=false;
+
+document.getElementById("speedMsg").textContent=
+`نتيجتك ${result} مللي ثانية`;
+
+let best=localStorage.getItem("oddoraBestSpeed");
+
+if(!best || result<Number(best)){
+localStorage.setItem("oddoraBestSpeed",result);
+document.getElementById("bestSpeed").textContent=result;
+}
+
+e.target.disabled=false;
+e.target.textContent="جولة جديدة";
+e.target.style.background="";
+}
+
+});
+
+
+/* =========================
+   GUESS GAME
+========================= */
+
+let secretNumber=0;
+let guesses=0;
+
+function openGuess(){
+
+openGame(`
+<div class="game-title">🔢 خمن الرقم</div>
+
+<div class="game-area">
+<div class="game-message" id="guessMsg">
+اختر رقمًا بين 1 و100.
+</div>
+
+<input id="guessInput" class="input" type="number" min="1" max="100" placeholder="اكتب رقمك">
+
+<div style="text-align:center">
+<button class="small-btn" onclick="makeGuess()">خمن</button>
+<button class="small-btn secondary" onclick="newGuess()">لعبة جديدة</button>
+</div>
+
+<div class="stats">
+<div class="stat">المحاولات: <span id="guessCount">0</span></div>
+</div>
+</div>
+`);
+
+newGuess();
+}
+
+function newGuess(){
+secretNumber=Math.floor(Math.random()*100)+1;
+guesses=0;
+
+if(document.getElementById("guessMsg")){
+document.getElementById("guessMsg").textContent="اختر رقمًا بين 1 و100.";
+document.getElementById("guessCount").textContent="0";
+document.getElementById("guessInput").value="";
+}
+}
+
+function makeGuess(){
+
+let input=document.getElementById("guessInput");
+let number=Number(input.value);
+let msg=document.getElementById("guessMsg");
+
+if(!number || number<1 || number>100){
+msg.textContent="أدخل رقمًا من 1 إلى 100.";
+return;
+}
+
+guesses++;
+document.getElementById("guessCount").textContent=guesses;
+
+if(number===secretNumber){
+msg.textContent=`🎉 ممتاز! الرقم هو ${secretNumber}. عدد المحاولات: ${guesses}`;
+}else if(number<secretNumber){
+msg.textContent="الرقم أكبر ↑";
+}else{
+msg.textContent="الرقم أصغر ↓";
+}
+}
+
+
+/* =========================
+   MEMORY GAME
+========================= */
+
+function openMemory(){
+
+openGame(`
+<div class="game-title">🧠 تحدي الذاكرة</div>
+
+<div class="game-area">
+<div class="game-message">
+اعثر على جميع الأزواج.
+</div>
+
+<div id="memoryBoard"
+style="
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:10px;
+max-width:500px;
+margin:auto;
+"></div>
+
+<div style="text-align:center;margin-top:15px">
+<button class="small-btn" onclick="newMemory()">لعبة جديدة</button>
+</div>
+</div>
+`);
+
+newMemory();
+}
+
+let memoryCards=[];
+let memoryFirst=null;
+let memoryLock=false;
+let memoryMatches=0;
+
+function newMemory(){
+
+const icons=["🇯🇴","🏜️","🏙️","🚕","⚽","🌊","🐪","⭐"];
+
+memoryCards=[...icons,...icons]
+.sort(()=>Math.random()-.5);
+
+memoryFirst=null;
+memoryLock=false;
+memoryMatches=0;
+
+let board=document.getElementById("memoryBoard");
+
+if(!board)return;
+
+board.innerHTML="";
+
+memoryCards.forEach((icon,index)=>{
+
+let btn=document.createElement("button");
+
+btn.style.cssText=`
+height:75px;
+border-radius:14px;
+background:#151a2b;
+color:white;
+font-size:28px;
+border:1px solid #ffffff12;
+`;
+
+btn.textContent="❓";
+
+btn.onclick=()=>flipMemory(btn,index);
+
+board.appendChild(btn);
+
+});
+}
+
+function flipMemory(btn,index){
+
+if(memoryLock)return;
+if(btn.dataset.open==="1")return;
+
+btn.textContent=memoryCards[index];
+btn.dataset.open="1";
+
+if(memoryFirst===null){
+
+memoryFirst={btn,index};
+return;
 
 }
 
-function speedGame(){
+memoryLock=true;
 
-  showGame(`
+if(memoryCards[index]===memoryCards[memoryFirst.index]){
 
-    <h2>⚡ اختبار السرعة</h2>
+memoryMatches++;
+memoryLock=false;
+memoryFirst=null;
 
-    <p>
-      انتظر حتى يظهر "اضغط الآن!"
-      ثم اضغط بأسرع ما تستطيع.
-    </p>
+if(memoryMatches===8){
+setTimeout(()=>{
+alert("🎉 فزت! أكملت تحدي الذاكرة.");
+},200);
+}
 
-    <div id="speedText"
-         style="font-size:32px;margin:30px;">
-      انتظر...
-    </div>
+}else{
 
-    <button
-      class="play"
-      id="speedButton"
-      disabled>
-      اضغط!
-    </button>
+setTimeout(()=>{
 
-    <button
-      class="play close"
-      onclick="closeGame()">
-      إغلاق
-    </button>
+btn.textContent="❓";
+btn.dataset.open="0";
 
-  `);
+memoryFirst.btn.textContent="❓";
+memoryFirst.btn.dataset.open="0";
 
-  const text=document.getElementById("speedText");
-  const button=document.getElementById("speedButton");
+memoryFirst=null;
+memoryLock=false;
 
-  const delay=Math.floor(Math.random()*3000)+2000;
-
-  setTimeout(()=>{
-
-    text.textContent="اضغط الآن!";
-
-    button.disabled=false;
-
-    const start=Date.now();
-
-    button.onclick=()=>{
-
-      const result=Date.now()-start;
-
-      text.textContent=
-        "نتيجتك: "+result+" ms";
-
-      button.disabled=true;
-
-    };
-
-  },delay);
+},700);
 
 }
 
-function guessGame(){
+}
 
-  const secret=
-    Math.floor(Math.random()*100)+1;
 
-  showGame(`
+/* =========================
+   JORDAN PROPERTY GAME
+========================= */
 
-    <h2>🔢 خمن الرقم</h2>
+const properties=[
 
-    <p>
-      اختر رقمًا من 1 إلى 100.
-    </p>
+{name:"بداية الرحلة",type:"start",price:0,rent:0},
 
-    <input
-      id="guessInput"
-      type="number"
-      min="1"
-      max="100"
-      placeholder="اكتب الرقم هنا">
+{name:"وسط البلد",type:"property",price:120,rent:25},
 
-    <button
-      class="play"
-      onclick="checkGuess(${secret})">
-      تخمين
-    </button>
+{name:"بطاقة فرصة",type:"event",price:0,rent:0},
 
-    <div
-      id="guessResult"
-      class="result">
-    </div>
+{name:"جبل عمّان",type:"property",price:150,rent:30},
 
-    <button
-      class="play close"
-      onclick="closeGame()">
-      إغلاق
-    </button>
+{name:"رسوم الطريق",type:"fee",price:0,rent:35},
 
-  `);
+{name:"السلط",type:"property",price:170,rent:35},
+
+{name:"استراحة",type:"rest",price:0,rent:0},
+
+{name:"جرش",type:"property",price:190,rent:40},
+
+{name:"بطاقة فرصة",type:"event",price:0,rent:0},
+
+{name:"عجلون",type:"property",price:210,rent:45},
+
+{name:"مادبا",type:"property",price:220,rent:48},
+
+{name:"مهرجان",type:"event",price:0,rent:0},
+
+{name:"الكرك",type:"property",price:240,rent:52},
+
+{name:"رسوم صيانة",type:"fee",price:0,rent:45},
+
+{name:"وادي رم",type:"property",price:270,rent:60},
+
+{name:"استراحة",type:"rest",price:0,rent:0},
+
+{name:"العقبة",type:"property",price:300,rent:70},
+
+{name:"بطاقة فرصة",type:"event",price:0,rent:0},
+
+{name:"البتراء",type:"property",price:330,rent:80},
+
+{name:"المحطة الأخيرة",type:"property",price:360,rent:90}
+
+];
+
+let jordanGame=null;
+
+function openJordanGame(){
+
+jordanGame={
+player:{
+name:"أنت",
+pos:0,
+money:1000,
+properties:[],
+token:"🧑"
+},
+
+bots:[
+{name:"سليم",pos:0,money:1000,properties:[],token:"🤖"},
+{name:"ليان",pos:0,money:1000,properties:[],token:"🤖"}
+],
+
+turn:0,
+round:1,
+message:"ابدأ رحلتك!"
+};
+
+openGame(`
+<div class="game-title">🇯🇴 رحلة العقارات الأردنية</div>
+
+<div class="game-area">
+
+<div id="jordanStatus"></div>
+
+<div id="jordanBoard" class="board"></div>
+
+<div class="dice" id="dice">🎲</div>
+
+<div class="jordan-controls">
+<button class="small-btn" id="rollButton" onclick="playerRoll()">ارمِ النرد</button>
+<button class="small-btn secondary" onclick="restartJordan()">إعادة اللعبة</button>
+</div>
+
+<div class="game-message" id="jordanMessage"></div>
+
+<div class="leaderboard" id="jordanRank"></div>
+
+</div>
+`);
+
+renderJordan();
+}
+
+function renderJordan(){
+
+if(!jordanGame)return;
+
+let board=document.getElementById("jordanBoard");
+let status=document.getElementById("jordanStatus");
+
+board.innerHTML="";
+
+properties.forEach((p,i)=>{
+
+let cell=document.createElement("div");
+
+cell.className=
+"cell "+
+(p.type==="property"?"property ":"")+
+(p.type==="start"?"start ":"")+
+(p.type!=="property"?"special ":"");
+
+let tokens="";
+
+if(jordanGame.player.pos===i){
+tokens+=`<span class="player-token">${jordanGame.player.token}</span>`;
+}
+
+jordanGame.bots.forEach(bot=>{
+if(bot.pos===i){
+tokens+=`<span class="bot-token">${bot.token}</span>`;
+}
+});
+
+let owner="";
+
+if(p.type==="property"){
+
+if(jordanGame.player.properties.includes(i)){
+owner="ملكك";
+}
+
+jordanGame.bots.forEach(bot=>{
+if(bot.properties.includes(i)){
+owner=bot.name;
+}
+});
 
 }
 
-function checkGuess(secret){
+cell.innerHTML=`
+<div class="cell-name">${p.name}</div>
+<div class="price">
+${p.type==="property" ? p.price+" 💰" : ""}
+</div>
+<div class="tokens">${tokens}</div>
+<div class="owner">${owner}</div>
+`;
 
-  const input=
-    document.getElementById("guessInput");
+board.appendChild(cell);
 
-  const result=
-    document.getElementById("guessResult");
+});
 
-  const value=Number(input.value);
+status.innerHTML=`
+<div class="stats">
+<div class="stat">💰 رصيدك: <b>${jordanGame.player.money}</b></div>
+<div class="stat">🏠 عقاراتك: <b>${jordanGame.player.properties.length}</b></div>
+<div class="stat">🔄 الجولة: <b>${jordanGame.round}</b></div>
+</div>
+`;
 
-  if(!value){
+document.getElementById("jordanMessage").textContent=jordanGame.message;
 
-    result.textContent=
-      "اكتب رقمًا أولًا.";
+renderRanking();
+}
 
-    return;
+function playerRoll(){
 
-  }
+if(!jordanGame)return;
 
-  if(value===secret){
+let button=document.getElementById("rollButton");
 
-    result.textContent=
-      "أحسنت! وجدت الرقم الصحيح.";
+button.disabled=true;
 
-  }else if(value<secret){
+let dice=Math.floor(Math.random()*6)+1;
 
-    result.textContent=
-      "الرقم أكبر.";
+document.getElementById("dice").textContent=
+["⚀","⚁","⚂","⚃","⚄","⚅"][dice-1];
 
-  }else{
+movePlayer(jordanGame.player,dice);
 
-    result.textContent=
-      "الرقم أصغر.";
+setTimeout(()=>{
 
-  }
+botTurn(0);
+
+},700);
 
 }
 
-function memoryGame(){
+function movePlayer(player,dice){
 
-  showGame(`
+let old=player.pos;
 
-    <h2>🧠 تحدي الذاكرة</h2>
+player.pos+=dice;
 
-    <p>
-      سيظهر رقم لمدة ثانيتين.
-      حاول حفظه.
-    </p>
+if(player.pos>=properties.length){
 
-    <div
-      id="memoryNumber"
-      class="big-number">
-      ؟
-    </div>
+player.pos-=properties.length;
 
-    <button
-      class="play"
-      onclick="startMemory()">
-      ابدأ
-    </button>
+player.money+=200;
 
-    <button
-      class="play close"
-      onclick="closeGame()">
-      إغلاق
-    </button>
+jordanGame.message="🎁 مررت من نقطة البداية وحصلت على 200 عملة ODDORA!";
+}
 
-  `);
+let place=properties[player.pos];
+
+handleLanding(player,place,player.pos);
+
+renderJordan();
+}
+
+function handleLanding(player,place,index){
+
+if(place.type==="property"){
+
+let owner=getOwner(index);
+
+if(!owner){
+
+if(player.money>=place.price){
+
+if(player===jordanGame.player){
+
+let buy=confirm(
+`هل تريد شراء ${place.name} مقابل ${place.price} عملة؟`
+);
+
+if(buy){
+player.money-=place.price;
+player.properties.push(index);
+jordanGame.message=`🏠 اشتريت ${place.name}!`;
+}else{
+jordanGame.message=`وصلت إلى ${place.name} وتركت العقار.`;
+}
+
+}else{
+
+if(Math.random()<0.65){
+
+player.money-=place.price;
+player.properties.push(index);
+jordanGame.message=`🤖 ${player.name} اشترى ${place.name}.`;
 
 }
 
-function startMemory(){
+}
 
-  const number=
-    Math.floor(Math.random()*9000)+1000;
+}
 
-  const element=
-    document.getElementById("memoryNumber");
+}else if(owner!==player){
 
-  element.textContent=number;
+let rent=place.rent;
 
-  setTimeout(()=>{
+player.money-=rent;
+owner.money+=rent;
 
-    element.textContent="؟";
+jordanGame.message=
+`💸 ${player.name} دفع ${rent} عملة إيجارًا مقابل ${place.name}.`;
 
-    const answer=
-      prompt("ما الرقم الذي ظهر؟");
+}
 
-    if(answer==number){
+}
 
-      alert("إجابة صحيحة!");
+else if(place.type==="start"){
 
-    }else{
+player.money+=100;
+jordanGame.message=
+`🏁 ${player.name} وصل إلى البداية وحصل على 100 عملة.`;
 
-      alert(
-        "إجابة خاطئة. الرقم كان: "+number
-      );
+}
 
-    }
+else if(place.type==="fee"){
 
-  },2000);
+let fee=place.rent;
+
+player.money=Math.max(0,player.money-fee);
+
+jordanGame.message=
+`💸 ${player.name} دفع ${fee} عملة رسومًا.`;
+
+}
+
+else if(place.type==="event"){
+
+randomJordanEvent(player);
+
+}
+
+else{
+
+jordanGame.message=
+`🛑 ${player.name} أخذ استراحة في ${place.name}.`;
+
+}
+
+}
+
+function randomJordanEvent(player){
+
+let events=[
+
+{
+text:"🎉 مكافأة! ربحت 100 عملة.",
+money:100
+},
+
+{
+text:"🚕 ازدحام في الطريق! خسرت 60 عملة.",
+money:-60
+},
+
+{
+text:"🏜️ رحلة جميلة إلى الجنوب! ربحت 80 عملة.",
+money:80
+},
+
+{
+text:"🔧 صيانة مفاجئة للمركبة! خسرت 70 عملة.",
+money:-70
+},
+
+{
+text:"🏆 فزت بتحدي ODDORA! ربحت 120 عملة.",
+money:120
+}
+
+];
+
+let event=events[Math.floor(Math.random()*events.length)];
+
+player.money=Math.max(0,player.money+event.money);
+
+jordanGame.message=event.text;
+
+}
+
+function getOwner(index){
+
+if(jordanGame.player.properties.includes(index))
+return jordanGame.player;
+
+for(let bot of jordanGame.bots){
+
+if(bot.properties.includes(index))
+return bot;
+
+}
+
+return null;
+
+}
+
+function botTurn(index){
+
+if(!jordanGame)return;
+
+if(index>=jordanGame.bots.length){
+
+jordanGame.round++;
+
+document.getElementById("rollButton").disabled=false;
+
+checkJordanGame();
+
+renderJordan();
+
+return;
+
+}
+
+let bot=jordanGame.bots[index];
+
+let dice=Math.floor(Math.random()*6)+1;
+
+bot.pos+=dice;
+
+if(bot.pos>=properties.length){
+
+bot.pos-=properties.length;
+bot.money+=150;
+
+}
+
+handleLanding(bot,properties[bot.pos],bot.pos);
+
+renderJordan();
+
+setTimeout(()=>{
+
+botTurn(index+1);
+
+},700);
+
+}
+
+function renderRanking(){
+
+let players=[
+jordanGame.player,
+...jordanGame.bots
+];
+
+players.sort((a,b)=>{
+
+let aValue=a.money+a.properties.reduce((sum,i)=>sum+properties[i].price,0);
+let bValue=b.money+b.properties.reduce((sum,i)=>sum+properties[i].price,0);
+
+return bValue-aValue;
+
+});
+
+let html="";
+
+players.forEach((p,i)=>{
+
+let value=p.money+p.properties.reduce(
+(sum,index)=>sum+properties[index].price,0
+);
+
+html+=`
+<div class="rank">
+<span>${i+1}. ${p.token} ${p.name}</span>
+<span>${value} 💰</span>
+</div>
+`;
+
+});
+
+document.getElementById("jordanRank").innerHTML=html;
+
+}
+
+function checkJordanGame(){
+
+if(jordanGame.player.money<=0){
+
+jordanGame.message=
+"انتهت أموالك. حاول مرة أخرى واستثمر بشكل أفضل.";
+
+document.getElementById("rollButton").disabled=true;
+
+}
+
+if(jordanGame.round>=20){
+
+document.getElementById("rollButton").disabled=true;
+
+let players=[
+jordanGame.player,
+...jordanGame.bots
+];
+
+players.sort((a,b)=>{
+
+let av=a.money+a.properties.reduce((s,i)=>s+properties[i].price,0);
+let bv=b.money+b.properties.reduce((s,i)=>s+properties[i].price,0);
+
+return bv-av;
+
+});
+
+jordanGame.message=
+`🏁 انتهت اللعبة! رصيدك وقيمة عقاراتك: ${
+jordanGame.player.money+
+jordanGame.player.properties.reduce((s,i)=>s+properties[i].price,0)
+} عملة.`;
+
+}
+
+}
+
+function restartJordan(){
+openJordanGame();
+}
+
+
+/* =========================
+   INFO PAGES
+========================= */
+
+function showInfo(type){
+
+let title="";
+let body="";
+
+if(type==="privacy"){
+
+title="سياسة الخصوصية";
+
+body=`
+<h2>ما الذي نستخدمه؟</h2>
+<p>
+نحترم خصوصية زوار ODDORA. الموقع في نسخته الحالية لا يطلب إنشاء حساب
+ولا يطلب معلومات شخصية للعب الألعاب.
+</p>
+
+<h2>الإعلانات</h2>
+<p>
+قد تتم إضافة خدمات إعلانية مستقبلًا. عند ذلك قد تستخدم شبكات الإعلانات
+تقنيات مثل ملفات تعريف الارتباط لعرض إعلانات مناسبة وقياس الأداء.
+</p>
+
+<h2>بيانات الألعاب</h2>
+<p>
+بعض النتائج والإعدادات قد يتم حفظها محليًا على جهازك باستخدام
+Local Storage.
+</p>
+`;
+
+}
+
+if(type==="terms"){
+
+title="شروط الاستخدام";
+
+body=`
+<h2>استخدام الموقع</h2>
+<p>
+ODDORA Games منصة ترفيهية مجانية. الألعاب الموجودة في الموقع مخصصة
+للترفيه ولا تمثل أموالًا حقيقية.
+</p>
+
+<h2>العملات داخل الألعاب</h2>
+<p>
+العملات والنقاط الموجودة في الألعاب افتراضية ولا يمكن تحويلها إلى
+دينار أو أي عملة حقيقية.
+</p>
+
+<h2>الاستخدام المسؤول</h2>
+<p>
+يُمنع استخدام الموقع بطريقة تؤدي إلى تعطيله أو محاولة اختراقه أو
+إلحاق الضرر بالمستخدمين الآخرين.
+</p>
+`;
+
+}
+
+if(type==="about"){
+
+title="عن ODDORA";
+
+body=`
+<h2>ODDORA Games 🇯🇴</h2>
+<p>
+مشروع ألعاب ويب يهدف إلى تقديم ألعاب خفيفة وسريعة وممتعة للجمهور
+العربي والعالمي، مع التركيز على أفكار مستوحاة من الأردن والمنطقة.
+</p>
+
+<h2>رؤيتنا</h2>
+<p>
+بناء منصة ألعاب مستقلة يمكن تطويرها باستمرار وإضافة ألعاب جديدة
+ومزايا اجتماعية وتنافسية إليها.
+</p>
+`;
+
+}
+
+openGame(`
+<div class="info-page">
+<h1>${title}</h1>
+${body}
+<div style="text-align:center;margin-top:30px">
+<button class="small-btn" onclick="closeGame()">رجوع</button>
+</div>
+</div>
+`);
 
 }
 
