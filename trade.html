@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ODDORA العقارات</title>
+
+<style>
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+}
+
+body{
+  font-family:Arial,Tahoma,sans-serif;
+  background:
+    radial-gradient(circle at top,#35105d 0,#12051f 45%,#07030d 100%);
+  color:#fff;
+  min-height:100vh;
+  padding:15px;
+}
+
+.container{
+  max-width:900px;
+  margin:auto;
+}
+
+header{
+  text-align:center;
+  padding:15px 0 20px;
+}
+
+.logo{
+  font-size:32px;
+  font-weight:900;
+  letter-spacing:3px;
+  color:#00f0ff;
+  text-shadow:0 0 20px #00f0ff;
+}
+
+.subtitle{
+  margin-top:6px;
+  color:#cbbbe5;
+  font-size:14px;
+}
+
+.stats{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  margin-bottom:12px;
+}
+
+.stat{
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:15px;
+  padding:12px 5px;
+  text-align:center;
+}
+
+.stat small{
+  display:block;
+  color:#aaa;
+  margin-bottom:5px;
+}
+
+.stat strong{
+  color:#00f0ff;
+  font-size:18px;
+}
+
+.game{
+  background:rgba(12,5,24,.9);
+  border:1px solid rgba(0,240,255,.2);
+  border-radius:24px;
+  padding:12px;
+  box-shadow:0 15px 50px rgba(0,0,0,.4);
+}
+
+.board{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:6px;
+  aspect-ratio:1/1;
+}
+
+.cell{
+  position:relative;
+  min-width:0;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,.15);
+  background:linear-gradient(145deg,#26153b,#130a20);
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  text-align:center;
+  padding:4px;
+  overflow:hidden;
+}
+
+.cell.property{
+  cursor:pointer;
+}
+
+.cell.property:hover{
+  transform:scale(1.02);
+}
+
+.cell .icon{
+  font-size:20px;
+}
+
+.cell .name{
+  font-size:9px;
+  font-weight:bold;
+  margin-top:3px;
+}
+
+.cell .price{
+  font-size:8px;
+  color:#8ffcff;
+  margin-top:2px;
+}
+
+.start{
+  background:linear-gradient(145deg,#005d66,#102b3a);
+}
+
+.event{
+  background:linear-gradient(145deg,#4b185d,#21102f);
+}
+
+.tax{
+  background:linear-gradient(145deg,#63310e,#271507);
+}
+
+.center{
+  grid-column:2 / 5;
+  grid-row:2 / 5;
+  border-radius:20px;
+  background:
+    radial-gradient(circle,#32145b,#11051e);
+  border:1px solid rgba(0,240,255,.25);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:20px;
+}
+
+.center h2{
+  color:#00f0ff;
+  font-size:25px;
+  margin-bottom:8px;
+}
+
+.center p{
+  color:#c8b8d8;
+  font-size:12px;
+  line-height:1.7;
+}
+
+.player{
+  position:absolute;
+  bottom:3px;
+  left:3px;
+  font-size:17px;
+  filter:drop-shadow(0 0 5px #00f0ff);
+}
+
+.controls{
+  display:flex;
+  gap:10px;
+  margin-top:14px;
+}
+
+button{
+  border:0;
+  border-radius:15px;
+  padding:14px;
+  font-size:15px;
+  font-weight:bold;
+  cursor:pointer;
+  color:#fff;
+}
+
+.roll{
+  flex:1;
+  background:linear-gradient(135deg,#00b7c7,#006bff);
+  box-shadow:0 0 20px rgba(0,220,255,.25);
+}
+
+.new{
+  width:120px;
+  background:#30203e;
+}
+
+.message{
+  min-height:50px;
+  background:rgba(255,255,255,.06);
+  border-radius:15px;
+  margin-top:10px;
+  padding:12px;
+  text-align:center;
+  font-size:13px;
+  color:#ddd;
+}
+
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.75);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  z-index:50;
+}
+
+.modal.show{
+  display:flex;
+}
+
+.modal-box{
+  width:100%;
+  max-width:400px;
+  background:#170a25;
+  border:1px solid #00eaff;
+  border-radius:22px;
+  padding:22px;
+  text-align:center;
+  box-shadow:0 0 40px rgba(0,230,255,.2);
+}
+
+.modal-box h2{
+  color:#00eaff;
+  margin-bottom:10px;
+}
+
+.modal-box p{
+  color:#ccc;
+  line-height:1.7;
+  margin-bottom:15px;
+}
+
+.buy{
+  width:100%;
+  background:linear-gradient(135deg,#7b2cff,#00b7ff);
+  margin-bottom:8px;
+}
+
+.close{
+  width:100%;
+  background:#30203e;
+}
+
+footer{
+  text-align:center;
+  color:#766b82;
+  font-size:11px;
+  padding:20px 0 5px;
+}
+
+@media(max-width:500px){
+  body{
+    padding:8px;
+  }
+
+  .logo{
+    font-size:27px;
+  }
+
+  .game{
+    padding:8px;
+  }
+
+  .board{
+    gap:4px;
+  }
+
+  .cell .icon{
+    font-size:16px;
+  }
+
+  .cell .name{
+    font-size:7px;
+  }
+
+  .cell .price{
+    font-size:7px;
+  }
+
+  .center h2{
+    font-size:19px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<header>
+  <div class="logo">ODDORA</div>
+  <div class="subtitle">العقارات — لعبة التجارة والمغامرة</div>
+</header>
+
+<div class="stats">
+  <div class="stat">
+    <small>رصيدك</small>
+    <strong id="money">1500</strong>
+  </div>
+
+  <div class="stat">
+    <small>موقعك</small>
+    <strong id="position">البداية</strong>
+  </div>
+
+  <div class="stat">
+    <small>الجولة</small>
+    <strong id="round">1</strong>
+  </div>
+</div>
+
+<div class="game">
+
+  <div class="board" id="board">
+
+    <div class="cell start" data-pos="0">
+      <div class="icon">🚀</div>
+      <div class="name">البداية</div>
+      <div class="price">+200</div>
+    </div>
+
+    <div class="cell property" data-pos="1">
+      <div class="icon">🏠</div>
+      <div class="name">الواحة</div>
+      <div class="price">120</div>
+    </div>
+
+    <div class="cell event" data-pos="2">
+      <div class="icon">🎁</div>
+      <div class="name">مفاجأة</div>
+    </div>
+
+    <div class="cell property" data-pos="3">
+      <div class="icon">🏢</div>
+      <div class="name">المرجان</div>
+      <div class="price">160</div>
+    </div>
+
+    <div class="cell tax" data-pos="4">
+      <div class="icon">💰</div>
+      <div class="name">ضريبة</div>
+      <div class="price">-100</div>
+    </div>
+
+    <div class="cell property" data-pos="9">
+      <div class="icon">🏘️</div>
+      <div class="name">النخيل</div>
+      <div class="price">200</div>
+    </div>
+
+    <div class="center">
+      <div>
+        <h2>ODDORA</h2>
+        <p>
+          ارْمِ النرد، تحرك، اشترِ العقارات،
+          واجمع الإيجارات.<br>
+          هدفك أن تصبح أكبر تاجر في المدينة.
+        </p>
+      </div>
+    </div>
+
+    <div class="cell property" data-pos="5">
+      <div class="icon">🏙️</div>
+      <div class="name">البرج</div>
+      <div class="price">250</div>
+    </div>
+
+    <div class="cell tax" data-pos="8">
+      <div class="icon">⚡</div>
+      <div class="name">كهرباء</div>
+      <div class="price">-80</div>
+    </div>
+
+    <div class="cell event" data-pos="7">
+      <div class="icon">🎲</div>
+      <div class="name">حظك اليوم</div>
+    </div>
+
+    <div class="cell property" data-pos="6">
+      <div class="icon">🏖️</div>
+      <div class="name">الخليج</div>
+      <div class="price">220</div>
+    </div>
+
+  </div>
+
+  <div class="message" id="message">
+    دورك! اضغط «ارمِ النرد» وابدأ رحلتك.
+  </div>
+
+  <div class="controls">
+    <button class="roll" onclick="rollDice()">🎲 ارمِ النرد</button>
+    <button class="new" onclick="newGame()">لعبة جديدة</button>
+  </div>
+
+</div>
+
+<footer>
+  ODDORA © 2026 — جميع الأموال داخل اللعبة افتراضية.
+</footer>
+
+</div>
+
+<div class="modal" id="propertyModal">
+  <div class="modal-box">
+
+    <h2 id="modalTitle">العقار</h2>
+
+    <p id="modalText"></p>
+
+    <button class="buy" id="buyButton">
+      شراء العقار
+    </button>
+
+    <button class="close" onclick="closeModal()">
+      إغلاق
+    </button>
+
+  </div>
+</div>
+
+<script>
+
+const properties = {
+  1:{
+    name:"الواحة",
+    price:120,
+    rent:35
+  },
+  3:{
+    name:"المرجان",
+    price:160,
+    rent:45
+  },
+  5:{
+    name:"البرج",
+    price:250,
+    rent:70
+  },
+  6:{
+    name:"الخليج",
+    price:220,
+    rent:60
+  },
+  9:{
+    name:"النخيل",
+    price:200,
+    rent:55
+  }
+};
+
+let money = 1500;
+let position = 0;
+let round = 1;
+let owned = {};
+
+function updateStats(){
+
+  document.getElementById("money").textContent = money;
+
+  const cell = document.querySelector(
+    '.cell[data-pos="' + position + '"]'
+  );
+
+  if(cell){
+    const name = cell.querySelector(".name");
+    document.getElementById("position").textContent =
+      name ? name.textContent : "موقع";
+  }
+
+  document.getElementById("round").textContent = round;
+}
+
+function clearPlayer(){
+
+  document.querySelectorAll(".player").forEach(
+    p => p.remove()
+  );
+}
+
+function showPlayer(){
+
+  clearPlayer();
+
+  const cell = document.querySelector(
+    '.cell[data-pos="' + position + '"]'
+  );
+
+  if(!cell) return;
+
+  const player = document.createElement("div");
+
+  player.className = "player";
+  player.textContent = "🧑";
+
+  cell.appendChild(player);
+}
+
+function rollDice(){
+
+  const dice = Math.floor(Math.random()*6)+1;
+
+  let oldPosition = position;
+
+  position += dice;
+
+  if(position > 9){
+
+    position = position - 10;
+
+    money += 200;
+
+    showMessage(
+      "🎉 مررت من البداية وحصلت على 200 عملة!"
+    );
+  }
+
+  if(position <= oldPosition){
+    round++;
+  }
+
+  updateStats();
+  showPlayer();
+
+  setTimeout(() => handleCell(),500);
+}
+
+function handleCell(){
+
+  if(properties[position]){
+
+    const property = properties[position];
+
+    if(owned[position]){
+
+      money += property.rent;
+
+      updateStats();
+
+      showMessage(
+        "🏠 هذا عقارك! حصلت على إيجار قدره "
+        + property.rent
+        + " عملة."
+      );
+
+      return;
+    }
+
+    openProperty(property);
+
+    return;
+  }
+
+  if(position === 0){
+
+    money += 200;
+
+    updateStats();
+
+    showMessage(
+      "🚀 وصلت إلى البداية! حصلت على 200 عملة."
+    );
+
+    return;
+  }
+
+  if(position === 2){
+
+    const reward = Math.floor(
+      Math.random()*151
+    ) + 50;
+
+    money += reward;
+
+    updateStats();
+
+    showMessage(
+      "🎁 مفاجأة! حصلت على "
+      + reward
+      + " عملة."
+    );
+
+    return;
+  }
+
+  if(position === 7){
+
+    const result = Math.floor(
+      Math.random()*201
+    ) - 100;
+
+    money += result;
+
+    if(money < 0) money = 0;
+
+    updateStats();
+
+    if(result >= 0){
+
+      showMessage(
+        "🎲 حظك اليوم! ربحت "
+        + result
+        + " عملة."
+      );
+
+    }else{
+
+      showMessage(
+        "🎲 حظك اليوم! خسرت "
+        + Math.abs(result)
+        + " عملة."
+      );
+    }
+
+    return;
+  }
+
+  if(position === 4){
+
+    money -= 100;
+
+    if(money < 0) money = 0;
+
+    updateStats();
+
+    showMessage(
+      "💰 دفعت ضريبة 100 عملة."
+    );
+
+    return;
+  }
+
+  if(position === 8){
+
+    money -= 80;
+
+    if(money < 0) money = 0;
+
+    updateStats();
+
+    showMessage(
+      "⚡ دفعت 80 عملة للخدمات."
+    );
+
+    return;
+  }
+
+}
+
+function openProperty(property){
+
+  document.getElementById("modalTitle").textContent =
+    "🏠 " + property.name;
+
+  document.getElementById("modalText").innerHTML =
+    "سعر العقار: <b>"
+    + property.price
+    + "</b> عملة<br><br>"
+    + "الإيجار عند مرور لاعب آخر: <b>"
+    + property.rent
+    + "</b> عملة";
+
+  const button = document.getElementById("buyButton");
+
+  button.disabled = false;
+
+  if(money < property.price){
+
+    button.textContent =
+      "رصيدك غير كافٍ";
+
+    button.disabled = true;
+
+  }else{
+
+    button.textContent =
+      "شراء العقار بـ " + property.price;
+
+  }
+
+  button.onclick = function(){
+
+    if(money >= property.price){
+
+      money -= property.price;
+
+      owned[position] = true;
+
+      updateStats();
+
+      closeModal();
+
+      showMessage(
+        "🎉 مبروك! أصبحت تملك عقار "
+        + property.name
+        + "."
+      );
+
+    }
+
+  };
+
+  document
+    .getElementById("propertyModal")
+    .classList.add("show");
+}
+
+function closeModal(){
+
+  document
+    .getElementById("propertyModal")
+    .classList.remove("show");
+}
+
+function showMessage(text){
+
+  document.getElementById("message").textContent =
+    text;
+}
+
+function newGame(){
+
+  money = 1500;
+  position = 0;
+  round = 1;
+  owned = {};
+
+  closeModal();
+  updateStats();
+  showPlayer();
+
+  showMessage(
+    "بدأت لعبة جديدة! بالتوفيق."
+  );
+}
+
+updateStats();
+showPlayer();
+
+</script>
+
+</body>
+</html>
