@@ -1,4 +1,12 @@
-const games = [
+const SUPABASE_URL = "ضع_هنا_Project_URL";
+const SUPABASE_KEY = "ضع_هنا_Publishable_or_anon_Key";
+
+const supabaseClient = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+const games = [const games = [
   {
     id: "reaction",
     title: "Reaction Rush",
