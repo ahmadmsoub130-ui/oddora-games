@@ -1,94 +1,82 @@
-const SUPABASE_URL = "ضع_هنا_Project_URL";
-const SUPABASE_KEY = "ضع_هنا_Publishable_or_anon_Key";
+const SUPABASE_URL = "https://xywhwqbfzfvwjdthchjz.supabase.co";
+const SUPABASE_KEY = "sb_publishable_31E-JTjhC4YxVIxrYHwfKA_4v4RbeZs";
 
-const supabaseClient = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_KEY
-);
+let supabaseClient = null;
 
-const games = [const games = [
+if (
+  window.supabase &&
+  typeof window.supabase.createClient === "function"
+) {
+  try {
+    supabaseClient = window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_KEY
+    );
+  } catch (error) {
+    console.error("Supabase error:", error);
+  }
+}
+
+const games = [
   {
     id: "reaction",
-    title: "Reaction Rush",
+    name: "Reaction Rush",
     icon: "⚡",
-    description: "اختبر سرعة رد فعلك في 10 جولات."
+    description: "Test your reaction speed. Tap as fast as you can!",
+    play: startReactionGame
   },
   {
     id: "click",
-    title: "Click Storm",
-    icon: "🖱️",
-    description: "اضغط بأسرع ما تستطيع خلال 10 ثوانٍ."
+    name: "Click Storm",
+    icon: "👆",
+    description: "Click as many times as possible before time runs out.",
+    play: startClickGame
   },
   {
     id: "math",
-    title: "Quick Math",
+    name: "Quick Math",
     icon: "🧠",
-    description: "حل أكبر عدد من المسائل قبل انتهاء الوقت."
+    description: "Solve mathematical challenges before the timer ends.",
+    play: startMathGame
   },
   {
     id: "memory",
-    title: "Memory Match",
-    icon: "🧩",
-    description: "اختبر ذاكرتك وطابق البطاقات."
+    name: "Memory Match",
+    icon: "🃏",
+    description: "Remember the cards and find matching pairs.",
+    play: startMemoryGame
   },
   {
     id: "target",
-    title: "Target Tap",
+    name: "Target Tap",
     icon: "🎯",
-    description: "اضرب الأهداف المتحركة واحصل على أعلى نتيجة."
+    description: "Hit the moving target as quickly as possible.",
+    play: startTargetGame
   },
   {
     id: "color",
-    title: "Color Switch",
+    name: "Color Switch",
     icon: "🌈",
-    description: "اختر اللون الصحيح قبل انتهاء الوقت."
+    description: "Choose the correct color before time runs out.",
+    play: startColorGame
   }
 ];
 
 const gameGrid = document.getElementById("gameGrid");
-const search = document.getElementById("search");
-const modal = document.getElementById("gameModal");
+const gameModal = document.getElementById("gameModal");
 const gameArea = document.getElementById("gameArea");
 const closeModal = document.getElementById("closeModal");
-const leaderboardBox = document.getElementById("leaderboardBox");
 const loginBtn = document.getElementById("loginBtn");
+const search = document.getElementById("search");
+const leaderboardBox = document.getElementById("leaderboardBox");
 
 let currentGame = null;
-
-function getScores() {
-  try {
-    return JSON.parse(localStorage.getItem("oddoraScores")) || {};
-  } catch {
-    return {};
-  }
-}
-
-function saveScore(game, score) {
-  const scores = getScores();
-
-  if (!scores[game]) {
-    scores[game] = [];
-  }
-
-  scores[game].push({
-    score: Math.round(score),
-    date: Date.now()
-  });
-
-  scores[game].sort((a, b) => b.score - a.score);
-  scores[game] = scores[game].slice(0, 10);
-
-  localStorage.setItem("oddoraScores", JSON.stringify(scores));
-
-  renderLeaderboard();
-}
-
-function getBestScore(game) {
-  const scores = getScores();
-  return scores[game]?.[0]?.score || 0;
-}
+let timer = null;
+let score = 0;
 
 function renderGames(list = games) {
+  if (!gameGrid) return;
+
   gameGrid.innerHTML = "";
 
   list.forEach(game => {
@@ -97,105 +85,56 @@ function renderGames(list = games) {
 
     card.innerHTML = `
       <div class="game-icon">${game.icon}</div>
-      <h3>${game.title}</h3>
+      <h3>${game.name}</h3>
       <p>${game.description}</p>
       <button class="play-button">PLAY NOW</button>
     `;
 
-    card.querySelector(".play-button").addEventListener("click", () => {
-      openGame(game.id);
+    card.querySelector("button").addEventListener("click", () => {
+      openGame(game);
     });
 
     gameGrid.appendChild(card);
   });
 }
 
-function renderLeaderboard() {
-  const scores = getScores();
-  const allScores = [];
+function openGame(game) {
+  currentGame = game;
+  clearInterval(timer);
 
-  Object.keys(scores).forEach(gameId => {
-    scores[gameId].forEach(item => {
-      const game = games.find(g => g.id === gameId);
+  if (!gameModal || !gameArea) return;
 
-      if (game) {
-        allScores.push({
-          game: game.title,
-          score: item.score
-        });
-      }
-    });
-  });
+  gameModal.classList.remove("hidden");
+  gameArea.innerHTML = "";
 
-  allScores.sort((a, b) => b.score - a.score);
-
-  if (!allScores.length) {
-    leaderboardBox.innerHTML = `
-      <div class="score-row">
-        <span class="score-name">No scores yet</span>
-        <span class="score-value">—</span>
-      </div>
-    `;
-    return;
-  }
-
-  leaderboardBox.innerHTML = allScores
-    .slice(0, 10)
-    .map((item, index) => `
-      <div class="score-row">
-        <span class="score-name">
-          #${index + 1} ${item.game}
-        </span>
-        <span class="score-value">
-          ${item.score}
-        </span>
-      </div>
-    `)
-    .join("");
-}
-
-function openGame(id) {
-  currentGame = id;
-  modal.classList.remove("hidden");
-
-  if (id === "reaction") {
-    reactionRush();
-  }
-
-  if (id === "click") {
-    clickStorm();
-  }
-
-  if (id === "math") {
-    quickMath();
-  }
-
-  if (id === "memory") {
-    memoryMatch();
-  }
-
-  if (id === "target") {
-    targetTap();
-  }
-
-  if (id === "color") {
-    colorSwitch();
-  }
+  game.play();
 }
 
 function closeGame() {
-  modal.classList.add("hidden");
-  gameArea.innerHTML = "";
+  clearInterval(timer);
+  timer = null;
   currentGame = null;
+
+  if (gameModal) {
+    gameModal.classList.add("hidden");
+  }
+
+  if (gameArea) {
+    gameArea.innerHTML = "";
+  }
 }
 
-closeModal.addEventListener("click", closeGame);
+if (closeModal) {
+  closeModal.addEventListener("click", closeGame);
+}
 
-modal.addEventListener("click", e => {
-  if (e.target === modal) {
-    closeGame();
-  }
-});
+if (gameModal) {
+  gameModal.addEventListener("click", e => {
+    if (e.target === gameModal) {
+      closeGame();
+    }
+  });
+}
 
 document.addEventListener("keydown", e => {
   if (e.key === "Escape") {
@@ -203,396 +142,214 @@ document.addEventListener("keydown", e => {
   }
 });
 
-search.addEventListener("input", e => {
-  const value = e.target.value.toLowerCase().trim();
+if (search) {
+  search.addEventListener("input", e => {
+    const value = e.target.value.toLowerCase().trim();
 
-  const filtered = games.filter(game =>
-    game.title.toLowerCase().includes(value) ||
-    game.description.toLowerCase().includes(value)
-  );
+    const filtered = games.filter(game =>
+      game.name.toLowerCase().includes(value) ||
+      game.description.toLowerCase().includes(value)
+    );
 
-  renderGames(filtered);
-});
+    renderGames(filtered);
+  });
+}
+
+function showGameTitle(title, description = "") {
+  gameArea.innerHTML = `
+    <h2>${title}</h2>
+    ${description ? `<p>${description}</p>` : ""}
+  `;
+}
+
+function addButton(text, callback) {
+  const button = document.createElement("button");
+  button.className = "game-action";
+  button.textContent = text;
+  button.addEventListener("click", callback);
+  gameArea.appendChild(button);
+  return button;
+}
+
+function showScore(finalScore) {
+  gameArea.innerHTML = `
+    <h2>Game Over</h2>
+    <div class="big-score">${finalScore}</div>
+    <p>Your score</p>
+  `;
+
+  addButton("PLAY AGAIN", () => {
+    if (currentGame) currentGame.play();
+  });
+
+  saveScore(finalScore);
+}
 
 /* =========================
    REACTION RUSH
 ========================= */
 
-function reactionRush() {
-  let round = 0;
-  let totalScore = 0;
-  let bestReaction = Infinity;
-  let timer = null;
-  let started = false;
-  let target = null;
-  let startTime = 0;
+function startReactionGame() {
+  clearInterval(timer);
 
   gameArea.innerHTML = `
-    <h2>⚡ Reaction Rush</h2>
-
-    <p>
-      Wait for the target to appear.
-      Then tap it as quickly as possible.
-    </p>
-
-    <div id="reactionInfo">
-      Round 0 / 10
+    <h2>Reaction Rush</h2>
+    <p>Wait for the button to turn green, then tap it!</p>
+    <div id="reactionStatus" style="margin:25px 0;font-size:20px;">
+      Get ready...
     </div>
-
-    <div
-      id="reactionArena"
-      style="
-        position:relative;
-        height:300px;
-        margin:20px 0;
-        border:1px solid #303a60;
-        border-radius:18px;
-        background:#080b18;
-        overflow:hidden;
-      "
-    >
-      <button
-        id="reactionStart"
-        class="game-action"
-        style="
-          position:absolute;
-          left:50%;
-          top:50%;
-          transform:translate(-50%,-50%);
-        "
-      >
-        START GAME
-      </button>
-    </div>
-
-    <div id="reactionResult"></div>
+    <button id="reactionButton"
+      class="game-action"
+      style="width:100%;height:120px;background:#333;">
+      WAIT
+    </button>
   `;
 
-  const arena = document.getElementById("reactionArena");
-  const info = document.getElementById("reactionInfo");
-  const startButton = document.getElementById("reactionStart");
-  const result = document.getElementById("reactionResult");
+  const button = document.getElementById("reactionButton");
+  const status = document.getElementById("reactionStatus");
 
-  function startGame() {
-    round = 0;
-    totalScore = 0;
-    bestReaction = Infinity;
-    started = true;
+  let startTime = 0;
+  let active = false;
+  let finished = false;
 
-    startButton.remove();
-    nextRound();
-  }
+  const delay = 1500 + Math.random() * 3000;
 
-  function nextRound() {
-    if (!started) return;
+  const timeout = setTimeout(() => {
+    if (finished) return;
 
-    round++;
+    active = true;
+    startTime = performance.now();
 
-    if (round > 10) {
-      finishGame();
+    button.style.background = "#16c784";
+    button.textContent = "TAP!";
+    status.textContent = "GO!";
+  }, delay);
+
+  button.addEventListener("click", () => {
+    if (finished) return;
+
+    if (!active) {
+      clearTimeout(timeout);
+      finished = true;
+
+      gameArea.innerHTML = `
+        <h2>Too Early!</h2>
+        <p>You tapped before the signal.</p>
+      `;
+
+      addButton("TRY AGAIN", startReactionGame);
       return;
     }
 
-    info.textContent = `Round ${round} / 10`;
+    finished = true;
 
-    arena.innerHTML = "";
+    const reaction = Math.round(performance.now() - startTime);
+    const reactionScore = Math.max(1, 1000 - reaction);
 
-    const waiting = document.createElement("div");
-
-    waiting.textContent = "WAIT...";
-    waiting.style.position = "absolute";
-    waiting.style.left = "50%";
-    waiting.style.top = "50%";
-    waiting.style.transform = "translate(-50%, -50%)";
-    waiting.style.fontSize = "30px";
-    waiting.style.fontWeight = "900";
-
-    arena.appendChild(waiting);
-
-    const delay = 900 + Math.random() * 2600;
-
-    timer = setTimeout(() => {
-      showTarget();
-    }, delay);
-  }
-
-  function showTarget() {
-    if (!started) return;
-
-    arena.innerHTML = "";
-
-    target = document.createElement("button");
-
-    target.textContent = "TAP!";
-
-    target.style.position = "absolute";
-    target.style.width = "82px";
-    target.style.height = "82px";
-    target.style.borderRadius = "50%";
-    target.style.border = "0";
-    target.style.background = "#695cff";
-    target.style.color = "#fff";
-    target.style.fontWeight = "900";
-    target.style.cursor = "pointer";
-    target.style.fontSize = "15px";
-
-    const x = Math.random() * (arena.clientWidth - 100) + 10;
-    const y = Math.random() * (arena.clientHeight - 100) + 10;
-
-    target.style.left = `${x}px`;
-    target.style.top = `${y}px`;
-
-    startTime = performance.now();
-
-    target.addEventListener("click", event => {
-      event.stopPropagation();
-
-      const reaction = Math.round(performance.now() - startTime);
-
-      if (reaction < bestReaction) {
-        bestReaction = reaction;
-      }
-
-      const points = Math.max(50, 1000 - reaction);
-
-      totalScore += points;
-
-      arena.innerHTML = `
-        <div style="
-          position:absolute;
-          left:50%;
-          top:50%;
-          transform:translate(-50%,-50%);
-          text-align:center;
-        ">
-          <div style="font-size:35px;font-weight:900;">
-            ${reaction} ms
-          </div>
-
-          <div style="margin-top:10px;color:#9187ff;">
-            +${points} points
-          </div>
-        </div>
-      `;
-
-      setTimeout(nextRound, 700);
-    });
-
-    arena.appendChild(target);
-  }
-
-  arena.addEventListener("click", () => {
-    if (!started || !target) return;
-
-    clearTimeout(timer);
-
-    arena.innerHTML = `
-      <div style="
-        position:absolute;
-        left:50%;
-        top:50%;
-        transform:translate(-50%,-50%);
-        text-align:center;
-      ">
-        <div style="
-          font-size:32px;
-          font-weight:900;
-        ">
-          TOO EARLY!
-        </div>
-
-        <div style="
-          margin-top:10px;
-          color:#aeb7d5;
-        ">
-          +0 points
-        </div>
-      </div>
-    `;
-
-    target = null;
-
-    setTimeout(nextRound, 700);
+    showScore(reactionScore);
   });
-
-  function finishGame() {
-    started = false;
-
-    clearTimeout(timer);
-
-    saveScore("reaction", totalScore);
-
-    result.innerHTML = `
-      <div style="margin-top:20px;">
-        <div style="
-          font-size:16px;
-          color:#aeb7d5;
-        ">
-          FINAL SCORE
-        </div>
-
-        <div class="big-score">
-          ${totalScore}
-        </div>
-
-        <div style="margin-bottom:20px;">
-          Best reaction:
-          <strong>
-            ${bestReaction === Infinity ? "—" : bestReaction + " ms"}
-          </strong>
-        </div>
-
-        <button id="reactionAgain" class="game-action">
-          PLAY AGAIN
-        </button>
-      </div>
-    `;
-
-    document
-      .getElementById("reactionAgain")
-      .addEventListener("click", reactionRush);
-  }
-
-  startButton.addEventListener("click", startGame);
 }
 
 /* =========================
    CLICK STORM
 ========================= */
 
-function clickStorm() {
+function startClickGame() {
+  clearInterval(timer);
+
   let clicks = 0;
-  let time = 10;
-  let running = false;
-  let interval = null;
+  let seconds = 10;
 
   gameArea.innerHTML = `
-    <h2>🖱️ Click Storm</h2>
+    <h2>Click Storm</h2>
+    <p>Click as many times as possible in 10 seconds.</p>
 
-    <p>
-      Click as many times as possible in 10 seconds.
-    </p>
-
-    <div style="font-size:25px;margin:20px;">
-      Time:
-      <strong id="clickTime">10</strong>
+    <div style="font-size:24px;margin:20px;">
+      Time: <strong id="clickTime">10</strong>
     </div>
 
-    <div class="big-score" id="clickScore">
-      0
-    </div>
+    <div class="big-score" id="clickScore">0</div>
 
-    <button id="clickButton" class="game-action">
-      START
+    <button id="clickButton"
+      class="game-action"
+      style="width:100%;height:120px;font-size:28px;">
+      CLICK!
     </button>
   `;
 
   const button = document.getElementById("clickButton");
-  const score = document.getElementById("clickScore");
-  const timeText = document.getElementById("clickTime");
+  const timeDisplay = document.getElementById("clickTime");
+  const scoreDisplay = document.getElementById("clickScore");
 
   button.addEventListener("click", () => {
-    if (!running) {
-      running = true;
-      clicks = 0;
-      time = 10;
-
-      button.textContent = "CLICK!";
-
-      interval = setInterval(() => {
-        time--;
-
-        timeText.textContent = time;
-
-        if (time <= 0) {
-          clearInterval(interval);
-          running = false;
-
-          button.textContent = "PLAY AGAIN";
-
-          saveScore("click", clicks);
-
-          alert(`Time's up! Your score: ${clicks}`);
-        }
-      }, 1000);
-
-      return;
-    }
-
     clicks++;
-    score.textContent = clicks;
+    scoreDisplay.textContent = clicks;
   });
+
+  timer = setInterval(() => {
+    seconds--;
+
+    timeDisplay.textContent = seconds;
+
+    if (seconds <= 0) {
+      clearInterval(timer);
+      showScore(clicks);
+    }
+  }, 1000);
 }
 
 /* =========================
    QUICK MATH
 ========================= */
 
-function quickMath() {
-  let score = 0;
-  let question = 0;
+function startMathGame() {
+  clearInterval(timer);
+
+  let points = 0;
+  let seconds = 20;
   let answer = 0;
-  let timer = 20;
-  let interval = null;
 
   gameArea.innerHTML = `
-    <h2>🧠 Quick Math</h2>
+    <h2>Quick Math</h2>
+    <p>Solve as many questions as possible.</p>
 
-    <p>
-      Solve as many questions as possible.
-    </p>
-
-    <div style="font-size:20px;margin:15px;">
-      Time:
-      <strong id="mathTime">20</strong>
+    <div style="font-size:22px;margin:15px;">
+      Time: <strong id="mathTime">20</strong>
     </div>
 
-    <div
-      id="mathQuestion"
-      style="
-        font-size:42px;
-        font-weight:900;
-        margin:25px;
-      "
-    >
-      Ready?
+    <div id="mathQuestion"
+      style="font-size:42px;font-weight:900;margin:25px;">
     </div>
 
-    <input
-      id="mathAnswer"
+    <input id="mathInput"
       type="number"
       inputmode="numeric"
       placeholder="Answer"
       style="
         width:100%;
-        max-width:260px;
-        padding:14px;
-        border-radius:12px;
-        border:1px solid #303a60;
-        background:#080b18;
-        color:#fff;
+        padding:15px;
+        border-radius:10px;
+        border:1px solid #293253;
+        background:#070914;
+        color:white;
         text-align:center;
         margin-bottom:15px;
-      "
-    >
+      ">
 
-    <br>
-
-    <button id="mathStart" class="game-action">
-      START
+    <button id="mathSubmit" class="game-action">
+      SUBMIT
     </button>
 
     <div style="margin-top:20px;">
-      Score:
-      <strong id="mathScore">0</strong>
+      Score: <strong id="mathScore">0</strong>
     </div>
   `;
 
-  const questionBox = document.getElementById("mathQuestion");
-  const answerInput = document.getElementById("mathAnswer");
-  const startButton = document.getElementById("mathStart");
-  const scoreText = document.getElementById("mathScore");
-  const timeText = document.getElementById("mathTime");
+  const question = document.getElementById("mathQuestion");
+  const input = document.getElementById("mathInput");
+  const submit = document.getElementById("mathSubmit");
+  const scoreDisplay = document.getElementById("mathScore");
+  const timeDisplay = document.getElementById("mathTime");
 
   function newQuestion() {
     const a = Math.floor(Math.random() * 20) + 1;
@@ -614,134 +371,94 @@ function quickMath() {
       answer = a * b;
     }
 
-    questionBox.textContent = `${a} ${operation} ${b}`;
-    answerInput.value = "";
-    answerInput.focus();
+    question.textContent = `${a} ${operation} ${b}`;
+    input.value = "";
+    input.focus();
   }
 
-  function finish() {
-    clearInterval(interval);
-
-    saveScore("math", score);
-
-    questionBox.textContent = `FINAL SCORE: ${score}`;
-    startButton.textContent = "PLAY AGAIN";
-    answerInput.disabled = true;
-  }
-
-  startButton.addEventListener("click", () => {
-    if (timer <= 0) {
-      timer = 20;
-      score = 0;
-      answerInput.disabled = false;
+  function submitAnswer() {
+    if (Number(input.value) === answer) {
+      points++;
+      scoreDisplay.textContent = points;
     }
-
-    score = 0;
-    timer = 20;
-
-    scoreText.textContent = score;
-    timeText.textContent = timer;
 
     newQuestion();
+  }
 
-    clearInterval(interval);
+  submit.addEventListener("click", submitAnswer);
 
-    interval = setInterval(() => {
-      timer--;
-
-      timeText.textContent = timer;
-
-      if (timer <= 0) {
-        finish();
-      }
-    }, 1000);
-  });
-
-  answerInput.addEventListener("keydown", e => {
-    if (e.key !== "Enter") return;
-
-    if (timer <= 0) return;
-
-    const userAnswer = Number(answerInput.value);
-
-    if (userAnswer === answer) {
-      score += 10;
-      scoreText.textContent = score;
-      newQuestion();
-    } else {
-      answerInput.value = "";
+  input.addEventListener("keydown", e => {
+    if (e.key === "Enter") {
+      submitAnswer();
     }
   });
+
+  newQuestion();
+
+  timer = setInterval(() => {
+    seconds--;
+
+    timeDisplay.textContent = seconds;
+
+    if (seconds <= 0) {
+      clearInterval(timer);
+      showScore(points);
+    }
+  }, 1000);
 }
 
 /* =========================
    MEMORY MATCH
 ========================= */
 
-function memoryMatch() {
-  const symbols = [
-    "🍎",
-    "🍎",
-    "🚀",
-    "🚀",
-    "⭐",
-    "⭐",
-    "🔥",
-    "🔥"
-  ];
+function startMemoryGame() {
+  clearInterval(timer);
 
-  symbols.sort(() => Math.random() - 0.5);
+  const symbols = ["🍎", "🍌", "🍇", "🍊"];
+
+  let cards = [...symbols, ...symbols];
+  cards.sort(() => Math.random() - 0.5);
 
   let first = null;
   let second = null;
-  let lock = false;
+  let locked = false;
   let matches = 0;
 
   gameArea.innerHTML = `
-    <h2>🧩 Memory Match</h2>
+    <h2>Memory Match</h2>
+    <p>Find all matching pairs.</p>
 
-    <p>
-      Match all pairs.
-    </p>
-
-    <div
-      id="memoryGrid"
+    <div id="memoryGrid"
       style="
         display:grid;
         grid-template-columns:repeat(4,1fr);
         gap:10px;
         max-width:400px;
         margin:25px auto;
-      "
-    ></div>
-
-    <div id="memoryStatus">
-      Matches: 0 / 4
+      ">
     </div>
   `;
 
   const grid = document.getElementById("memoryGrid");
-  const status = document.getElementById("memoryStatus");
 
-  symbols.forEach(symbol => {
+  cards.forEach((symbol, index) => {
     const card = document.createElement("button");
 
-    card.textContent = "?";
-
     card.dataset.symbol = symbol;
+    card.dataset.index = index;
 
-    card.style.height = "80px";
+    card.style.height = "75px";
     card.style.fontSize = "30px";
-    card.style.border = "1px solid #303a60";
+    card.style.border = "1px solid #343e66";
     card.style.borderRadius = "12px";
-    card.style.background = "#171d35";
+    card.style.background = "#070914";
     card.style.color = "#fff";
     card.style.cursor = "pointer";
 
+    card.textContent = "?";
+
     card.addEventListener("click", () => {
-      if (lock) return;
-      if (card === first) return;
-      if (card.dataset.matched === "true") return;
+      if (locked || card.classList.contains("matched")) return;
 
       card.textContent = symbol;
 
@@ -751,40 +468,30 @@ function memoryMatch() {
       }
 
       second = card;
-      lock = true;
+      locked = true;
 
       if (first.dataset.symbol === second.dataset.symbol) {
-        first.dataset.matched = "true";
-        second.dataset.matched = "true";
+        first.classList.add("matched");
+        second.classList.add("matched");
 
         matches++;
-
-        status.textContent = `Matches: ${matches} / 4`;
-
         first = null;
         second = null;
-        lock = false;
+        locked = false;
 
-        if (matches === 4) {
-          saveScore("memory", 1000);
-          status.innerHTML = `
-            <strong>
-              YOU WIN! +1000
-            </strong>
-          `;
+        if (matches === symbols.length) {
+          showScore(100 * matches);
         }
+      } else {
+        setTimeout(() => {
+          first.textContent = "?";
+          second.textContent = "?";
 
-        return;
+          first = null;
+          second = null;
+          locked = false;
+        }, 700);
       }
-
-      setTimeout(() => {
-        first.textContent = "?";
-        second.textContent = "?";
-
-        first = null;
-        second = null;
-        lock = false;
-      }, 700);
     });
 
     grid.appendChild(card);
@@ -795,378 +502,545 @@ function memoryMatch() {
    TARGET TAP
 ========================= */
 
-function targetTap() {
-  let score = 0;
-  let time = 20;
-  let running = false;
-  let interval = null;
-  let targetTimer = null;
+function startTargetGame() {
+  clearInterval(timer);
+
+  let points = 0;
+  let seconds = 15;
 
   gameArea.innerHTML = `
-    <h2>🎯 Target Tap</h2>
+    <h2>Target Tap</h2>
+    <p>Hit the target as many times as possible.</p>
 
-    <p>
-      Hit as many targets as possible in 20 seconds.
-    </p>
-
-    <div>
-      Time:
-      <strong id="targetTime">20</strong>
-      |
-      Score:
-      <strong id="targetScore">0</strong>
+    <div style="margin:15px;">
+      Time: <strong id="targetTime">15</strong>
     </div>
 
-    <div
-      id="targetArena"
+    <div id="targetArena"
       style="
         position:relative;
         height:320px;
-        margin:20px 0;
-        border-radius:18px;
-        border:1px solid #303a60;
-        background:#080b18;
+        background:#070914;
+        border:1px solid #293253;
+        border-radius:16px;
         overflow:hidden;
-      "
-    >
-      <button
-        id="targetStart"
-        class="game-action"
+        margin-top:20px;
+      ">
+
+      <button id="targetButton"
         style="
           position:absolute;
-          left:50%;
-          top:50%;
-          transform:translate(-50%,-50%);
-        "
-      >
-        START
+          width:65px;
+          height:65px;
+          border:0;
+          border-radius:50%;
+          background:#695cff;
+          color:white;
+          font-weight:900;
+          cursor:pointer;
+        ">
+        TAP
       </button>
+    </div>
+
+    <div style="margin-top:20px;">
+      Score: <strong id="targetScore">0</strong>
     </div>
   `;
 
   const arena = document.getElementById("targetArena");
-  const start = document.getElementById("targetStart");
-  const scoreText = document.getElementById("targetScore");
-  const timeText = document.getElementById("targetTime");
+  const button = document.getElementById("targetButton");
+  const timeDisplay = document.getElementById("targetTime");
+  const scoreDisplay = document.getElementById("targetScore");
 
-  function spawnTarget() {
-    if (!running) return;
+  function moveTarget() {
+    const maxX = arena.clientWidth - 65;
+    const maxY = arena.clientHeight - 65;
 
-    const target = document.createElement("button");
-
-    target.textContent = "+10";
-
-    target.style.position = "absolute";
-    target.style.width = "65px";
-    target.style.height = "65px";
-    target.style.borderRadius = "50%";
-    target.style.border = "0";
-    target.style.background = "#695cff";
-    target.style.color = "#fff";
-    target.style.fontWeight = "900";
-    target.style.cursor = "pointer";
-
-    target.style.left =
-      Math.random() * (arena.clientWidth - 80) + "px";
-
-    target.style.top =
-      Math.random() * (arena.clientHeight - 80) + "px";
-
-    target.addEventListener("click", e => {
-      e.stopPropagation();
-
-      score += 10;
-
-      scoreText.textContent = score;
-
-      target.remove();
-
-      spawnTarget();
-    });
-
-    arena.appendChild(target);
+    button.style.left = Math.random() * maxX + "px";
+    button.style.top = Math.random() * maxY + "px";
   }
 
-  function finish() {
-    running = false;
-
-    clearInterval(interval);
-    clearTimeout(targetTimer);
-
-    arena.innerHTML = `
-      <div style="
-        position:absolute;
-        left:50%;
-        top:50%;
-        transform:translate(-50%,-50%);
-        text-align:center;
-      ">
-        <div style="font-size:18px;">
-          FINAL SCORE
-        </div>
-
-        <div class="big-score">
-          ${score}
-        </div>
-
-        <button id="targetAgain" class="game-action">
-          PLAY AGAIN
-        </button>
-      </div>
-    `;
-
-    saveScore("target", score);
-
-    document
-      .getElementById("targetAgain")
-      .addEventListener("click", targetTap);
-  }
-
-  start.addEventListener("click", () => {
-    running = true;
-    score = 0;
-    time = 20;
-
-    start.remove();
-
-    scoreText.textContent = score;
-    timeText.textContent = time;
-
-    spawnTarget();
-
-    interval = setInterval(() => {
-      time--;
-
-      timeText.textContent = time;
-
-      if (time <= 0) {
-        finish();
-      }
-    }, 1000);
+  button.addEventListener("click", () => {
+    points++;
+    scoreDisplay.textContent = points;
+    moveTarget();
   });
+
+  moveTarget();
+
+  timer = setInterval(() => {
+    seconds--;
+
+    timeDisplay.textContent = seconds;
+
+    if (seconds <= 0) {
+      clearInterval(timer);
+      showScore(points);
+    }
+  }, 1000);
 }
 
 /* =========================
    COLOR SWITCH
 ========================= */
 
-function colorSwitch() {
+function startColorGame() {
+  clearInterval(timer);
+
   const colors = [
-    {
-      name: "RED",
-      value: "#ff4d6d"
-    },
-    {
-      name: "BLUE",
-      value: "#4d8dff"
-    },
-    {
-      name: "GREEN",
-      value: "#45d483"
-    },
-    {
-      name: "YELLOW",
-      value: "#ffd166"
-    }
+    { name: "RED", value: "#ef4444" },
+    { name: "BLUE", value: "#3b82f6" },
+    { name: "GREEN", value: "#22c55e" },
+    { name: "YELLOW", value: "#eab308" }
   ];
 
-  let score = 0;
-  let time = 20;
-  let running = false;
-  let interval = null;
-  let correct = null;
+  let points = 0;
+  let seconds = 20;
+  let correctColor = null;
 
   gameArea.innerHTML = `
-    <h2>🌈 Color Switch</h2>
+    <h2>Color Switch</h2>
+    <p>Tap the button that matches the requested color.</p>
 
-    <p>
-      Tap the button that matches the displayed color name.
-    </p>
-
-    <div>
-      Time:
-      <strong id="colorTime">20</strong>
-      |
-      Score:
-      <strong id="colorScore">0</strong>
+    <div style="margin:15px;font-size:22px;">
+      Time: <strong id="colorTime">20</strong>
     </div>
 
-    <div
-      id="colorName"
-      style="
-        font-size:45px;
-        font-weight:900;
-        margin:25px;
-      "
-    >
-      READY
+    <div id="colorQuestion"
+      style="font-size:30px;font-weight:900;margin:25px;">
     </div>
 
-    <div
-      id="colorButtons"
+    <div id="colorButtons"
       style="
         display:grid;
         grid-template-columns:1fr 1fr;
         gap:12px;
-      "
-    ></div>
+      ">
+    </div>
 
-    <button
-      id="colorStart"
-      class="game-action"
-      style="margin-top:20px;"
-    >
-      START
-    </button>
+    <div style="margin-top:20px;">
+      Score: <strong id="colorScore">0</strong>
+    </div>
   `;
 
-  const nameBox = document.getElementById("colorName");
-  const buttonsBox = document.getElementById("colorButtons");
-  const start = document.getElementById("colorStart");
-  const timeText = document.getElementById("colorTime");
-  const scoreText = document.getElementById("colorScore");
+  const question = document.getElementById("colorQuestion");
+  const buttons = document.getElementById("colorButtons");
+  const timeDisplay = document.getElementById("colorTime");
+  const scoreDisplay = document.getElementById("colorScore");
 
-  colors.forEach(color => {
-    const button = document.createElement("button");
+  function newRound() {
+    buttons.innerHTML = "";
 
-    button.textContent = color.name;
-
-    button.style.padding = "20px";
-    button.style.border = "0";
-    button.style.borderRadius = "14px";
-    button.style.background = color.value;
-    button.style.color = "#111";
-    button.style.fontWeight = "900";
-    button.style.cursor = "pointer";
-
-    button.addEventListener("click", () => {
-      if (!running) return;
-
-      if (color.name === correct) {
-        score += 10;
-      } else {
-        score = Math.max(0, score - 5);
-      }
-
-      scoreText.textContent = score;
-
-      nextColor();
-    });
-
-    buttonsBox.appendChild(button);
-  });
-
-  function nextColor() {
-    const random =
+    correctColor =
       colors[Math.floor(Math.random() * colors.length)];
 
-    correct = random.name;
+    question.textContent = correctColor.name;
 
-    nameBox.textContent = random.name;
-    nameBox.style.color = random.value;
+    const shuffled = [...colors].sort(() => Math.random() - 0.5);
+
+    shuffled.forEach(color => {
+      const button = document.createElement("button");
+
+      button.textContent = color.name;
+
+      button.style.padding = "20px";
+      button.style.border = "0";
+      button.style.borderRadius = "12px";
+      button.style.background = color.value;
+      button.style.color = "#fff";
+      button.style.fontWeight = "900";
+      button.style.cursor = "pointer";
+
+      button.addEventListener("click", () => {
+        if (color.name === correctColor.name) {
+          points++;
+        } else {
+          points = Math.max(0, points - 1);
+        }
+
+        scoreDisplay.textContent = points;
+
+        newRound();
+      });
+
+      buttons.appendChild(button);
+    });
   }
 
-  function finish() {
-    running = false;
+  newRound();
 
-    clearInterval(interval);
+  timer = setInterval(() => {
+    seconds--;
 
-    saveScore("color", score);
+    timeDisplay.textContent = seconds;
 
-    nameBox.textContent = `FINAL SCORE: ${score}`;
-
-    start.textContent = "PLAY AGAIN";
-  }
-
-  start.addEventListener("click", () => {
-    running = true;
-    score = 0;
-    time = 20;
-
-    scoreText.textContent = score;
-    timeText.textContent = time;
-
-    nextColor();
-
-    clearInterval(interval);
-
-    interval = setInterval(() => {
-      time--;
-
-      timeText.textContent = time;
-
-      if (time <= 0) {
-        finish();
-      }
-    }, 1000);
-  });
+    if (seconds <= 0) {
+      clearInterval(timer);
+      showScore(points);
+    }
+  }, 1000);
 }
 
 /* =========================
-   LOGIN
+   LOGIN / ACCOUNT
 ========================= */
 
-loginBtn.addEventListener("click", async () => {
-  const email = prompt("Enter your email:");
+function updateLoginButton() {
+  if (!loginBtn) return;
 
-  if (!email) return;
+  if (!supabaseClient) {
+    loginBtn.textContent = "SIGN IN";
+    return;
+  }
 
-  const password = prompt("Enter your password:");
+  supabaseClient.auth.getUser().then(({ data }) => {
+    if (data && data.user) {
+      loginBtn.textContent = "ACCOUNT";
+    } else {
+      loginBtn.textContent = "SIGN IN";
+    }
+  });
+}
 
-  if (!password) return;
+async function openLogin() {
+  if (!supabaseClient) {
+    alert("Supabase is not connected.");
+    return;
+  }
 
-  const { data, error } = await supabaseClient.auth.signInWithPassword({
-    email,
-    password
+  gameModal.classList.remove("hidden");
+
+  gameArea.innerHTML = `
+    <h2>ODDORA Account</h2>
+
+    <p>Sign in or create a new account.</p>
+
+    <input
+      id="emailInput"
+      type="email"
+      placeholder="Email"
+      style="
+        width:100%;
+        padding:14px;
+        margin-bottom:12px;
+        border-radius:10px;
+        border:1px solid #293253;
+        background:#070914;
+        color:white;
+      "
+    >
+
+    <input
+      id="passwordInput"
+      type="password"
+      placeholder="Password"
+      style="
+        width:100%;
+        padding:14px;
+        margin-bottom:15px;
+        border-radius:10px;
+        border:1px solid #293253;
+        background:#070914;
+        color:white;
+      "
+    >
+
+    <div style="
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:center;
+    ">
+      <button id="signInBtn" class="game-action">
+        SIGN IN
+      </button>
+
+      <button id="signUpBtn" class="game-action">
+        CREATE ACCOUNT
+      </button>
+    </div>
+
+    <p id="loginMessage" style="margin-top:20px;"></p>
+  `;
+
+  const emailInput = document.getElementById("emailInput");
+  const passwordInput = document.getElementById("passwordInput");
+  const signInBtn = document.getElementById("signInBtn");
+  const signUpBtn = document.getElementById("signUpBtn");
+  const message = document.getElementById("loginMessage");
+
+  signInBtn.addEventListener("click", async () => {
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+
+    if (!email || !password) {
+      message.textContent = "Enter email and password.";
+      return;
+    }
+
+    message.textContent = "Signing in...";
+
+    const { error } =
+      await supabaseClient.auth.signInWithPassword({
+        email,
+        password
+      });
+
+    if (error) {
+      message.textContent = error.message;
+      return;
+    }
+
+    message.textContent = "Signed in successfully.";
+
+    updateLoginButton();
+
+    setTimeout(closeGame, 800);
   });
 
-  if (error) {
-    const createAccount = confirm(
-      "Account not found. Do you want to create a new account?"
-    );
+  signUpBtn.addEventListener("click", async () => {
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
 
-    if (!createAccount) return;
+    if (!email || !password) {
+      message.textContent = "Enter email and password.";
+      return;
+    }
 
-    const { error: signupError } =
+    if (password.length < 6) {
+      message.textContent =
+        "Password must be at least 6 characters.";
+      return;
+    }
+
+    message.textContent = "Creating account...";
+
+    const { data, error } =
       await supabaseClient.auth.signUp({
         email,
         password
       });
 
-    if (signupError) {
-      alert(signupError.message);
+    if (error) {
+      message.textContent = error.message;
       return;
     }
 
-    alert(
-      "Account created successfully. Check your email if confirmation is required."
-    );
+    if (data.session) {
+      message.textContent = "Account created successfully.";
+    } else {
+      message.textContent =
+        "Account created. Check your email if confirmation is required.";
+    }
 
+    updateLoginButton();
+  });
+}
+
+async function accountMenu() {
+  if (!supabaseClient) return;
+
+  const { data } = await supabaseClient.auth.getUser();
+
+  if (!data || !data.user) {
+    openLogin();
     return;
   }
 
-  alert("Welcome to ODDORA!");
+  gameModal.classList.remove("hidden");
 
-  updateLoginButton();
-});
+  gameArea.innerHTML = `
+    <h2>ODDORA Account</h2>
 
-async function updateLoginButton() {
-  const {
-    data: { user }
-  } = await supabaseClient.auth.getUser();
+    <p>
+      ${data.user.email}
+    </p>
 
-  if (user) {
-    loginBtn.textContent = "ACCOUNT";
-  } else {
-    loginBtn.textContent = "SIGN IN";
-  }
+    <button id="logoutBtn" class="game-action">
+      SIGN OUT
+    </button>
+  `;
+
+  document
+    .getElementById("logoutBtn")
+    .addEventListener("click", async () => {
+      await supabaseClient.auth.signOut();
+
+      updateLoginButton();
+      closeGame();
+    });
 }
 
-updateLoginButton();
+if (loginBtn) {
+  loginBtn.addEventListener("click", async () => {
+    if (!supabaseClient) {
+      openLogin();
+      return;
+    }
+
+    const { data } = await supabaseClient.auth.getUser();
+
+    if (data && data.user) {
+      accountMenu();
+    } else {
+      openLogin();
+    }
+  });
+}
+
+if (supabaseClient) {
+  supabaseClient.auth.onAuthStateChange(() => {
+    updateLoginButton();
+  });
+}
+
+/* =========================
+   SAVE SCORE
+========================= */
+
+async function saveScore(finalScore) {
+  if (!currentGame) return;
+
+  const localKey = `oddora_${currentGame.id}_scores`;
+
+  let localScores = [];
+
+  try {
+    localScores =
+      JSON.parse(localStorage.getItem(localKey)) || [];
+  } catch {
+    localScores = [];
+  }
+
+  localScores.push({
+    score: finalScore,
+    date: new Date().toISOString()
+  });
+
+  localScores.sort((a, b) => b.score - a.score);
+
+  localScores = localScores.slice(0, 10);
+
+  localStorage.setItem(
+    localKey,
+    JSON.stringify(localScores)
+  );
+
+  if (!supabaseClient) {
+    loadLeaderboard();
+    return;
+  }
+
+  try {
+    const { data } =
+      await supabaseClient.auth.getUser();
+
+    if (!data || !data.user) {
+      loadLeaderboard();
+      return;
+    }
+
+    await supabaseClient
+      .from("game_scores")
+      .insert({
+        user_id: data.user.id,
+        game_id: currentGame.id,
+        score: finalScore
+      });
+  } catch (error) {
+    console.error("Score save error:", error);
+  }
+
+  loadLeaderboard();
+}
+
+/* =========================
+   LEADERBOARD
+========================= */
+
+async function loadLeaderboard() {
+  if (!leaderboardBox) return;
+
+  leaderboardBox.innerHTML = `
+    <div class="score-row">
+      <span class="score-name">Loading scores...</span>
+    </div>
+  `;
+
+  if (!supabaseClient) {
+    leaderboardBox.innerHTML = `
+      <div class="score-row">
+        <span class="score-name">
+          Sign in to use the online leaderboard.
+        </span>
+      </div>
+    `;
+    return;
+  }
+
+  try {
+    const { data, error } =
+      await supabaseClient
+        .from("game_scores")
+        .select("score, game_id, user_id")
+        .order("score", { ascending: false })
+        .limit(20);
+
+    if (error) {
+      console.error(error);
+
+      leaderboardBox.innerHTML = `
+        <div class="score-row">
+          <span class="score-name">
+            Leaderboard is ready for signed-in players.
+          </span>
+        </div>
+      `;
+
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      leaderboardBox.innerHTML = `
+        <div class="score-row">
+          <span class="score-name">
+            No scores yet. Be the first!
+          </span>
+        </div>
+      `;
+
+      return;
+    }
+
+    leaderboardBox.innerHTML = "";
+
+    data.forEach((item, index) => {
+      const row = document.createElement("div");
+
+      row.className = "score-row";
+
+      row.innerHTML = `
+        <span class="score-name">
+          #${index + 1} ${item.game_id}
+        </span>
+
+        <span class="score-value">
+          ${item.score}
+        </span>
+      `;
+
+      leaderboardBox.appendChild(row);
+    });
+  } catch (error) {
+    console.error("Leaderboard error:", error);
+  }
+}
 
 /* =========================
    START
 ========================= */
 
 renderGames();
-renderLeaderboard();
+updateLoginButton();
+loadLeaderboard();
