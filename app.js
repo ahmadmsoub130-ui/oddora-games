@@ -1,198 +1,64 @@
-/* =====================================================
-   ODDORA GAMES - APP.JS
-   ===================================================== */
-
-/* =========================
-   SUPABASE
-========================= */
-
-const SUPABASE_URL =
-  "https://mfhsjtrlrihhbqryajoc.supabase.co";
-
-const SUPABASE_KEY =
-  "sb_publishable_RpIsvyN1uDfQSSDnGBJEsw_L2OkdPJZ";
+const SUPABASE_URL = "https://mfhsjtrlrihhbqryajoc.supabase.co";
+const SUPABASE_KEY = "sb_publishable_RpIsvyN1uDfQSSDnGBJEsw_L2OkdPJZ";
 
 let supabaseClient = null;
 
-try {
-  if (window.supabase) {
+if (window.supabase) {
+  try {
     supabaseClient = window.supabase.createClient(
       SUPABASE_URL,
       SUPABASE_KEY
     );
+  } catch (e) {
+    console.error("Supabase error:", e);
   }
-} catch (error) {
-  console.error("Supabase initialization error:", error);
 }
 
-
-/* =========================
-   GLOBAL STATE
-========================= */
-
-let currentUser = null;
-
 let currentGame = null;
-
 let currentQuestion = 0;
-
 let currentScore = 0;
-
 let tapCount = 0;
-
-let tapTimeLeft = 0;
-
+let tapTime = 0;
 let tapTimer = null;
+let selectedCategory = "الكل";
+
+const gamesGrid = document.getElementById("gamesGrid");
+const searchInput = document.getElementById("search");
+const filters = document.getElementById("filters");
+const gameScreen = document.getElementById("gameScreen");
+const gameContent = document.getElementById("gameContent");
+const activeGameTitle = document.getElementById("activeGameTitle");
+const closeGame = document.getElementById("closeGame");
+
+const authModal = document.getElementById("authModal");
+const openAuth = document.getElementById("openAuth");
+const openAuthHero = document.getElementById("openAuthHero");
+const closeAuth = document.getElementById("closeAuth");
+
+const loginMode = document.getElementById("loginMode");
+const signupMode = document.getElementById("signupMode");
+const authTitle = document.getElementById("authTitle");
+const emailInput = document.getElementById("email");
+const passwordInput = document.getElementById("password");
+const submitAuth = document.getElementById("submitAuth");
+const authMessage = document.getElementById("authMessage");
+const authArea = document.getElementById("authArea");
 
 let authMode = "login";
 
-let selectedCategory = "الكل";
+document.getElementById("year").textContent =
+  new Date().getFullYear();
 
-
-/* =========================
-   LOCAL STORAGE
-========================= */
-
-const STORAGE_KEY = "oddora_scores";
-
-function getLocalScores() {
-
-  try {
-
-    return JSON.parse(
-      localStorage.getItem(STORAGE_KEY)
-    ) || {
-      total: 0,
-      games: {}
-    };
-
-  } catch {
-
-    return {
-      total: 0,
-      games: {}
-    };
-
-  }
-
-}
-
-
-function saveLocalScores(scores) {
-
-  localStorage.setItem(
-    STORAGE_KEY,
-    JSON.stringify(scores)
-  );
-
-}
-
-
-function addScore(gameId, points) {
-
-  const scores = getLocalScores();
-
-  scores.total += points;
-
-  if (!scores.games[gameId]) {
-    scores.games[gameId] = 0;
-  }
-
-  scores.games[gameId] += points;
-
-  saveLocalScores(scores);
-
-}
-
-
-/* =========================
-   DOM
-========================= */
-
-const gamesGrid =
-  document.getElementById("gamesGrid");
-
-const searchInput =
-  document.getElementById("search");
-
-const filters =
-  document.getElementById("filters");
-
-const gameScreen =
-  document.getElementById("gameScreen");
-
-const gameContent =
-  document.getElementById("gameContent");
-
-const activeGameTitle =
-  document.getElementById("activeGameTitle");
-
-const closeGame =
-  document.getElementById("closeGame");
-
-const year =
-  document.getElementById("year");
-
-const authModal =
-  document.getElementById("authModal");
-
-const openAuth =
-  document.getElementById("openAuth");
-
-const openAuthHero =
-  document.getElementById("openAuthHero");
-
-const closeAuth =
-  document.getElementById("closeAuth");
-
-const loginMode =
-  document.getElementById("loginMode");
-
-const signupMode =
-  document.getElementById("signupMode");
-
-const authTitle =
-  document.getElementById("authTitle");
-
-const emailInput =
-  document.getElementById("email");
-
-const passwordInput =
-  document.getElementById("password");
-
-const submitAuth =
-  document.getElementById("submitAuth");
-
-const authMessage =
-  document.getElementById("authMessage");
-
-const authArea =
-  document.getElementById("authArea");
-
-
-if (year) {
-  year.textContent = new Date().getFullYear();
-}
-
-
-/* =========================
-   HELPERS
-========================= */
-
-function escapeHTML(value) {
-
-  return String(value)
+function escapeHTML(text) {
+  return String(text ?? "")
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
-
 }
 
-
-function normalizeArabic(text) {
-
+function normalize(text) {
   return String(text || "")
     .trim()
     .toLowerCase()
@@ -202,162 +68,170 @@ function normalizeArabic(text) {
     .replace(/ؤ/g, "و")
     .replace(/ئ/g, "ي")
     .replace(/[\u064B-\u065F\u0670]/g, "");
-
 }
 
-
-/* =========================
-   GAME LIST
-========================= */
-
-function getFilteredGames() {
-
-  const search =
-    normalizeArabic(
-      searchInput?.value || ""
-    );
-
-  return GAMES.filter(game => {
-
-    const categoryMatch =
-      selectedCategory === "الكل" ||
-      game.category === selectedCategory;
-
-    const searchMatch =
-      !search ||
-      normalizeArabic(game.title)
-        .includes(search) ||
-      normalizeArabic(game.description)
-        .includes(search);
-
-    return categoryMatch && searchMatch;
-
-  });
-
+function getScores() {
+  try {
+    return JSON.parse(localStorage.getItem("oddora_scores")) || {
+      total: 0,
+      games: {}
+    };
+  } catch {
+    return {
+      total: 0,
+      games: {}
+    };
+  }
 }
 
+function addScore(gameId, points) {
+  const scores = getScores();
+
+  scores.total += points;
+
+  if (!scores.games[gameId]) {
+    scores.games[gameId] = 0;
+  }
+
+  scores.games[gameId] += points;
+
+  localStorage.setItem(
+    "oddora_scores",
+    JSON.stringify(scores)
+  );
+}
 
 /* =========================
-   RENDER GAMES
+   عرض الألعاب
 ========================= */
 
 function renderGames() {
-
   if (!gamesGrid) return;
 
-  const games =
-    getFilteredGames();
+  if (!Array.isArray(window.GAMES) && !Array.isArray(GAMES)) {
+    gamesGrid.innerHTML = `
+      <div class="content-box">
+        <h2>حدث خطأ في تحميل الألعاب</h2>
+        <p>ملف games.js لم يتم تحميله بشكل صحيح.</p>
+      </div>
+    `;
+    return;
+  }
 
-  if (!games.length) {
+  const allGames = Array.isArray(window.GAMES)
+    ? window.GAMES
+    : GAMES;
 
+  const search = normalize(
+    searchInput ? searchInput.value : ""
+  );
+
+  const filtered = allGames.filter(game => {
+
+    const categoryOK =
+      selectedCategory === "الكل" ||
+      game.category === selectedCategory;
+
+    const searchOK =
+      !search ||
+      normalize(game.title).includes(search) ||
+      normalize(game.description).includes(search);
+
+    return categoryOK && searchOK;
+  });
+
+  if (!filtered.length) {
     gamesGrid.innerHTML = `
       <div class="content-box"
            style="grid-column:1/-1;text-align:center">
-        <h2>لم نجد اللعبة</h2>
-        <p>جرّب كلمة بحث أخرى.</p>
+        <h2>لا توجد ألعاب</h2>
+        <p>جرّب البحث بكلمة أخرى.</p>
       </div>
     `;
-
     return;
-
   }
 
+  gamesGrid.innerHTML = filtered.map(game => `
+    <article class="game-card">
 
-  gamesGrid.innerHTML =
-    games.map(game => `
-
-      <article class="game-card">
-
-        <div>
-
-          <div class="game-icon">
-            ${game.icon}
-          </div>
-
-          <h3>
-            ${escapeHTML(game.title)}
-          </h3>
-
-          <p>
-            ${escapeHTML(game.description)}
-          </p>
-
-          <div class="game-category">
-            ${escapeHTML(game.category)}
-          </div>
-
+      <div>
+        <div class="game-icon">
+          ${game.icon || "🎮"}
         </div>
 
-        <button
-          class="btn"
-          data-play="${game.id}">
-          العب الآن
-        </button>
+        <h3>
+          ${escapeHTML(game.title)}
+        </h3>
 
-      </article>
+        <p>
+          ${escapeHTML(game.description)}
+        </p>
 
-    `).join("");
+        <div class="game-category">
+          ${escapeHTML(game.category)}
+        </div>
+      </div>
 
+      <button
+        class="btn"
+        data-play="${game.id}">
+        العب الآن
+      </button>
+
+    </article>
+  `).join("");
 
   gamesGrid
     .querySelectorAll("[data-play]")
     .forEach(button => {
 
-      button.addEventListener(
-        "click",
-        () => {
+      button.addEventListener("click", () => {
 
-          const id =
-            Number(button.dataset.play);
+        const id = Number(
+          button.getAttribute("data-play")
+        );
 
-          openGame(id);
-
-        }
-      );
+        openGame(id);
+      });
 
     });
-
 }
 
-
 /* =========================
-   OPEN GAME
+   فتح اللعبة
 ========================= */
 
 function openGame(id) {
 
-  const game =
-    GAMES.find(
-      item => item.id === id
-    );
+  const allGames =
+    Array.isArray(window.GAMES)
+      ? window.GAMES
+      : GAMES;
 
-  if (!game) return;
+  const game = allGames.find(
+    item => Number(item.id) === Number(id)
+  );
+
+  if (!game) {
+    alert("لم يتم العثور على اللعبة.");
+    return;
+  }
 
   currentGame = game;
-
   currentQuestion = 0;
-
   currentScore = 0;
-
   tapCount = 0;
 
   clearInterval(tapTimer);
 
-  if (activeGameTitle) {
-    activeGameTitle.textContent =
-      game.title;
-  }
+  activeGameTitle.textContent =
+    game.title;
 
-  if (gameScreen) {
-    gameScreen.hidden = false;
-  }
+  gameScreen.hidden = false;
 
-  document
-    .getElementById("games")
-    ?.scrollIntoView({
-      behavior: "smooth"
-    });
-
+  gameScreen.scrollIntoView({
+    behavior: "smooth"
+  });
 
   if (game.type === "quiz") {
     renderQuiz();
@@ -372,71 +246,41 @@ function openGame(id) {
   }
 
   else if (game.type === "tap") {
-    renderTapGame();
+    renderTap();
   }
 
+  else {
+    gameContent.innerHTML = `
+      <div class="content-box">
+        <h2>نوع اللعبة غير معروف</h2>
+      </div>
+    `;
+  }
 }
 
-
 /* =========================
-   CLOSE GAME
-========================= */
-
-function closeCurrentGame() {
-
-  clearInterval(tapTimer);
-
-  if (gameScreen) {
-    gameScreen.hidden = true;
-  }
-
-  if (gameContent) {
-    gameContent.innerHTML = "";
-  }
-
-  currentGame = null;
-
-  document
-    .getElementById("games")
-    ?.scrollIntoView({
-      behavior: "smooth"
-    });
-
-}
-
-
-closeGame?.addEventListener(
-  "click",
-  closeCurrentGame
-);
-
-
-/* =========================
-   QUIZ GAME
+   لعبة الأسئلة
 ========================= */
 
 function renderQuiz() {
 
-  const question =
-    currentGame.questions[currentQuestion];
+  const questions =
+    currentGame.questions || [];
 
-  if (!question) {
-
+  if (
+    currentQuestion >= questions.length
+  ) {
     finishQuiz();
-
     return;
-
   }
 
-
-  const total =
-    currentGame.questions.length;
+  const q =
+    questions[currentQuestion];
 
   gameContent.innerHTML = `
-
     <div class="scorebox">
       السؤال ${currentQuestion + 1}
-      / ${total}
+      / ${questions.length}
     </div>
 
     <div class="scorebox">
@@ -444,22 +288,18 @@ function renderQuiz() {
     </div>
 
     <div class="question">
-      ${escapeHTML(question.q)}
+      ${escapeHTML(q.q)}
     </div>
 
     <div class="answers">
 
-      ${question.answers.map(
-        (answer, index) => `
-
-          <button
-            class="answer"
-            data-answer="${index}">
-            ${escapeHTML(answer)}
-          </button>
-
-        `
-      ).join("")}
+      ${q.answers.map((answer, index) => `
+        <button
+          class="answer"
+          data-answer="${index}">
+          ${escapeHTML(answer)}
+        </button>
+      `).join("")}
 
     </div>
 
@@ -467,9 +307,7 @@ function renderQuiz() {
       class="result"
       id="quizResult">
     </div>
-
   `;
-
 
   gameContent
     .querySelectorAll("[data-answer]")
@@ -479,8 +317,10 @@ function renderQuiz() {
         "click",
         () => {
 
-          handleQuizAnswer(
-            Number(button.dataset.answer),
+          checkQuizAnswer(
+            Number(
+              button.getAttribute("data-answer")
+            ),
             button
           );
 
@@ -488,16 +328,14 @@ function renderQuiz() {
       );
 
     });
-
 }
 
-
-function handleQuizAnswer(
+function checkQuizAnswer(
   selected,
-  clickedButton
+  button
 ) {
 
-  const question =
+  const q =
     currentGame.questions[currentQuestion];
 
   const buttons =
@@ -506,58 +344,41 @@ function handleQuizAnswer(
     );
 
   buttons.forEach(
-    button => {
-      button.disabled = true;
-    }
+    b => b.disabled = true
   );
 
+  const result =
+    document.getElementById(
+      "quizResult"
+    );
 
-  if (selected === question.correct) {
+  if (selected === q.correct) {
 
     currentScore += 10;
 
-    clickedButton.classList.add(
-      "correct"
-    );
+    button.classList.add("correct");
 
-    const result =
-      document.getElementById(
-        "quizResult"
-      );
+    result.textContent =
+      "إجابة صحيحة! +10 نقاط";
 
-    if (result) {
-      result.textContent =
-        "إجابة صحيحة! +10 نقاط";
-      result.style.color =
-        "var(--good)";
-    }
+    result.style.color =
+      "var(--good)";
 
   } else {
 
-    clickedButton.classList.add(
-      "wrong"
-    );
+    button.classList.add("wrong");
 
-    buttons[
-      question.correct
-    ]?.classList.add(
-      "correct"
-    );
-
-    const result =
-      document.getElementById(
-        "quizResult"
-      );
-
-    if (result) {
-      result.textContent =
-        "إجابة غير صحيحة.";
-      result.style.color =
-        "var(--bad)";
+    if (buttons[q.correct]) {
+      buttons[q.correct]
+        .classList.add("correct");
     }
 
-  }
+    result.textContent =
+      "إجابة غير صحيحة.";
 
+    result.style.color =
+      "var(--bad)";
+  }
 
   setTimeout(() => {
 
@@ -566,9 +387,7 @@ function handleQuizAnswer(
     renderQuiz();
 
   }, 900);
-
 }
-
 
 function finishQuiz() {
 
@@ -578,7 +397,6 @@ function finishQuiz() {
   );
 
   gameContent.innerHTML = `
-
     <div class="content-box">
 
       <div style="font-size:60px">
@@ -591,9 +409,7 @@ function finishQuiz() {
 
       <p>
         حصلت على
-        <strong>
-          ${currentScore}
-        </strong>
+        <strong>${currentScore}</strong>
         نقطة.
       </p>
 
@@ -604,13 +420,11 @@ function finishQuiz() {
       </button>
 
     </div>
-
   `;
-
 
   document
     .getElementById("restartGame")
-    ?.addEventListener(
+    .addEventListener(
       "click",
       () => {
 
@@ -621,22 +435,19 @@ function finishQuiz() {
 
       }
     );
-
 }
 
-
 /* =========================
-   RIDDLE GAME
+   لعبة الألغاز
 ========================= */
 
 function renderRiddle() {
 
   gameContent.innerHTML = `
-
     <div class="riddle-box">
 
       <div style="font-size:55px">
-        ${currentGame.icon}
+        ${currentGame.icon || "🧩"}
       </div>
 
       <div class="question">
@@ -648,7 +459,6 @@ function renderRiddle() {
       <input
         id="riddleAnswer"
         class="text-input"
-        type="text"
         placeholder="اكتب إجابتك هنا"
         autocomplete="off">
 
@@ -666,9 +476,7 @@ function renderRiddle() {
       </div>
 
     </div>
-
   `;
-
 
   const input =
     document.getElementById(
@@ -685,37 +493,28 @@ function renderRiddle() {
       "riddleResult"
     );
 
+  function check() {
 
-  function checkAnswer() {
+    const answer =
+      normalize(input.value);
 
-    const userAnswer =
-      normalizeArabic(
-        input.value
-      );
-
-    if (!userAnswer) {
+    if (!answer) {
 
       result.textContent =
         "اكتب إجابة أولًا.";
 
       return;
-
     }
 
-
     const accepted =
-      currentGame.accepted || [
-        currentGame.answer
-      ];
-
+      currentGame.accepted ||
+      [currentGame.answer];
 
     const correct =
       accepted.some(
-        answer =>
-          normalizeArabic(answer)
-            === userAnswer
+        item =>
+          normalize(item) === answer
       );
-
 
     if (correct) {
 
@@ -724,7 +523,7 @@ function renderRiddle() {
         15
       );
 
-      result.innerHTML =
+      result.textContent =
         "إجابة صحيحة! +15 نقطة";
 
       result.style.color =
@@ -734,39 +533,33 @@ function renderRiddle() {
 
     } else {
 
-      result.innerHTML =
-        `إجابة غير صحيحة. حاول مرة أخرى.`;
+      result.textContent =
+        "إجابة غير صحيحة. حاول مرة أخرى.";
 
       result.style.color =
         "var(--bad)";
-
     }
-
   }
 
-
-  button?.addEventListener(
+  button.addEventListener(
     "click",
-    checkAnswer
+    check
   );
 
-
-  input?.addEventListener(
+  input.addEventListener(
     "keydown",
     event => {
 
       if (event.key === "Enter") {
-        checkAnswer();
+        check();
       }
 
     }
   );
-
 }
 
-
 /* =========================
-   STORY GAME
+   القصص
 ========================= */
 
 function renderStory() {
@@ -776,23 +569,17 @@ function renderStory() {
 
   let page = 0;
 
+  function draw() {
 
-  function drawStory() {
-
-    const isLast =
-      page >= story.length - 1;
-
+    const last =
+      page === story.length - 1;
 
     gameContent.innerHTML = `
-
       <div class="story">
 
         <div
-          style="
-            font-size:50px;
-            margin-bottom:10px;
-          ">
-          ${currentGame.icon}
+          style="font-size:50px">
+          ${currentGame.icon || "🌙"}
         </div>
 
         <div>
@@ -800,80 +587,67 @@ function renderStory() {
         </div>
 
         <div
-          style="
-            margin-top:20px;
-            color:var(--muted);
-          ">
+          style="margin-top:20px;color:var(--muted)">
           صفحة ${page + 1}
           من ${story.length}
         </div>
 
-        <div>
+        <div style="margin-top:20px">
 
           ${
             page > 0
-            ? `
-              <button
-                class="btn secondary"
-                id="storyBack">
-                السابق
-              </button>
-            `
-            : ""
+              ? `
+                <button
+                  class="btn secondary"
+                  id="storyBack">
+                  السابق
+                </button>
+              `
+              : ""
           }
 
           ${
-            !isLast
-            ? `
-              <button
-                class="btn"
-                id="storyNext">
-                التالي
-              </button>
-            `
-            : `
-              <button
-                class="btn"
-                id="storyFinish">
-                إنهاء القصة
-              </button>
-            `
+            !last
+              ? `
+                <button
+                  class="btn"
+                  id="storyNext">
+                  التالي
+                </button>
+              `
+              : `
+                <button
+                  class="btn"
+                  id="storyFinish">
+                  إنهاء القصة
+                </button>
+              `
           }
 
         </div>
 
       </div>
-
     `;
-
 
     document
       .getElementById("storyBack")
       ?.addEventListener(
         "click",
         () => {
-
           page--;
-
-          drawStory();
-
+          draw();
         }
       );
-
 
     document
       .getElementById("storyNext")
       ?.addEventListener(
         "click",
         () => {
-
           page++;
-
-          drawStory();
-
+          draw();
         }
       );
-
 
     document
       .getElementById("storyFinish")
@@ -881,9 +655,7 @@ function renderStory() {
         "click",
         finishStory
       );
-
   }
-
 
   function finishStory() {
 
@@ -893,7 +665,6 @@ function renderStory() {
     );
 
     gameContent.innerHTML = `
-
       <div class="content-box">
 
         <div style="font-size:60px">
@@ -906,8 +677,8 @@ function renderStory() {
 
         <p>
           حصلت على
-          <strong>20 نقطة</strong>
-          لإكمال القصة.
+          <strong>20</strong>
+          نقطة.
         </p>
 
         <button
@@ -917,57 +688,49 @@ function renderStory() {
         </button>
 
       </div>
-
     `;
-
 
     document
       .getElementById("storyAgain")
-      ?.addEventListener(
+      .addEventListener(
         "click",
         () => {
 
           page = 0;
 
-          drawStory();
+          draw();
 
         }
       );
-
   }
 
-
-  drawStory();
-
+  draw();
 }
 
-
 /* =========================
-   TAP GAME
+   تحديات الضغط
 ========================= */
 
-function renderTapGame() {
+function renderTap() {
 
   tapCount = 0;
 
-  tapTimeLeft =
-    currentGame.duration || 10;
-
+  tapTime =
+    Number(
+      currentGame.duration || 10
+    );
 
   gameContent.innerHTML = `
-
     <div>
 
-      <div
-        class="scorebox">
+      <div class="scorebox">
         الوقت:
         <span id="tapTimer">
-          ${tapTimeLeft}
+          ${tapTime}
         </span>
       </div>
 
-      <div
-        class="scorebox">
+      <div class="scorebox">
         الضغطات:
         <span id="tapScore">
           0
@@ -975,7 +738,7 @@ function renderTapGame() {
       </div>
 
       <div class="timer">
-        ${currentGame.icon}
+        ${currentGame.icon || "⚡"}
       </div>
 
       <button
@@ -991,62 +754,49 @@ function renderTapGame() {
       </div>
 
     </div>
-
   `;
 
-
-  const tapButton =
+  const button =
     document.getElementById(
       "tapButton"
     );
 
-  const timerElement =
+  const timer =
     document.getElementById(
       "tapTimer"
     );
 
-  const scoreElement =
+  const score =
     document.getElementById(
       "tapScore"
     );
 
-  const resultElement =
+  const result =
     document.getElementById(
       "tapResult"
     );
 
-
   let started = false;
 
-
-  function finishTapGame() {
+  function finish() {
 
     clearInterval(tapTimer);
 
-    tapButton.disabled = true;
+    button.disabled = true;
 
     const points =
-      Math.min(
-        tapCount,
-        100
-      );
-
+      Math.min(tapCount, 100);
 
     addScore(
       currentGame.id,
       points
     );
 
-
-    resultElement.innerHTML =
-      `انتهى الوقت! حصلت على
-       <strong>${points}</strong>
-       نقطة.`;
-
+    result.innerHTML =
+      `انتهى الوقت! حصلت على <strong>${points}</strong> نقطة.`;
   }
 
-
-  tapButton.addEventListener(
+  button.addEventListener(
     "click",
     () => {
 
@@ -1054,104 +804,121 @@ function renderTapGame() {
 
         started = true;
 
-        resultElement.textContent =
+        result.textContent =
           "استمر بالضغط!";
 
         tapTimer =
-          setInterval(() => {
+          setInterval(
+            () => {
 
-            tapTimeLeft--;
+              tapTime--;
 
-            timerElement.textContent =
-              tapTimeLeft;
+              timer.textContent =
+                tapTime;
 
-            if (tapTimeLeft <= 0) {
+              if (tapTime <= 0) {
+                finish();
+              }
 
-              finishTapGame();
-
-            }
-
-          }, 1000);
-
+            },
+            1000
+          );
       }
 
-
-      if (tapTimeLeft > 0) {
+      if (tapTime > 0) {
 
         tapCount++;
 
-        scoreElement.textContent =
+        score.textContent =
           tapCount;
-
       }
 
     }
   );
-
 }
 
-
 /* =========================
-   FILTERS
+   الفلاتر والبحث
 ========================= */
 
-filters
-  ?.querySelectorAll(
-    "[data-category]"
-  )
-  .forEach(button => {
+if (filters) {
 
-    button.addEventListener(
-      "click",
-      () => {
+  filters
+    .querySelectorAll(
+      "[data-category]"
+    )
+    .forEach(button => {
 
-        selectedCategory =
-          button.dataset.category;
+      button.addEventListener(
+        "click",
+        () => {
 
-        filters
-          .querySelectorAll("button")
-          .forEach(
-            item =>
-              item.classList.add(
-                "secondary"
-              )
+          selectedCategory =
+            button.dataset.category;
+
+          filters
+            .querySelectorAll("button")
+            .forEach(
+              b =>
+                b.classList.add(
+                  "secondary"
+                )
+            );
+
+          button.classList.remove(
+            "secondary"
           );
 
-        button.classList.remove(
-          "secondary"
-        );
+          renderGames();
+        }
+      );
 
-        renderGames();
+    });
+}
 
-      }
-    );
+if (searchInput) {
 
-  });
-
+  searchInput.addEventListener(
+    "input",
+    renderGames
+  );
+}
 
 /* =========================
-   SEARCH
+   إغلاق اللعبة
 ========================= */
 
-searchInput?.addEventListener(
-  "input",
-  renderGames
+closeGame?.addEventListener(
+  "click",
+  () => {
+
+    clearInterval(tapTimer);
+
+    gameScreen.hidden = true;
+
+    gameContent.innerHTML = "";
+
+    currentGame = null;
+
+    document
+      .getElementById("games")
+      ?.scrollIntoView({
+        behavior: "smooth"
+      });
+  }
 );
 
-
 /* =========================
-   AUTH MODAL
+   تسجيل الدخول
 ========================= */
 
-function showAuthModal(
-  mode = "login"
-) {
+function showAuth(mode) {
 
   authMode = mode;
 
-  if (!authModal) return;
-
-  authModal.classList.add("show");
+  authModal.classList.add(
+    "show"
+  );
 
   authModal.setAttribute(
     "aria-hidden",
@@ -1159,81 +926,19 @@ function showAuthModal(
   );
 
   updateAuthMode();
-
-  setTimeout(
-    () => emailInput?.focus(),
-    100
-  );
-
 }
 
+function hideAuth() {
 
-function hideAuthModal() {
-
-  authModal?.classList.remove(
+  authModal.classList.remove(
     "show"
   );
 
-  authModal?.setAttribute(
+  authModal.setAttribute(
     "aria-hidden",
     "true"
   );
-
-  clearAuthMessage();
-
 }
-
-
-openAuth?.addEventListener(
-  "click",
-  () => showAuthModal("login")
-);
-
-
-openAuthHero?.addEventListener(
-  "click",
-  () => showAuthModal("signup")
-);
-
-
-closeAuth?.addEventListener(
-  "click",
-  hideAuthModal
-);
-
-
-authModal?.addEventListener(
-  "click",
-  event => {
-
-    if (event.target === authModal) {
-      hideAuthModal();
-    }
-
-  }
-);
-
-
-document.addEventListener(
-  "keydown",
-  event => {
-
-    if (
-      event.key === "Escape" &&
-      authModal?.classList.contains("show")
-    ) {
-
-      hideAuthModal();
-
-    }
-
-  }
-);
-
-
-/* =========================
-   AUTH MODE
-========================= */
 
 function updateAuthMode() {
 
@@ -1268,11 +973,39 @@ function updateAuthMode() {
     loginMode.classList.add(
       "secondary"
     );
-
   }
-
 }
 
+function message(
+  text,
+  type = "normal"
+) {
+
+  authMessage.textContent =
+    text;
+
+  authMessage.style.color =
+    type === "error"
+      ? "var(--bad)"
+      : type === "success"
+        ? "var(--good)"
+        : "#ffd36b";
+}
+
+openAuth?.addEventListener(
+  "click",
+  () => showAuth("login")
+);
+
+openAuthHero?.addEventListener(
+  "click",
+  () => showAuth("signup")
+);
+
+closeAuth?.addEventListener(
+  "click",
+  hideAuth
+);
 
 loginMode?.addEventListener(
   "click",
@@ -1280,13 +1013,10 @@ loginMode?.addEventListener(
 
     authMode = "login";
 
-    clearAuthMessage();
-
     updateAuthMode();
 
   }
 );
-
 
 signupMode?.addEventListener(
   "click",
@@ -1294,92 +1024,23 @@ signupMode?.addEventListener(
 
     authMode = "signup";
 
-    clearAuthMessage();
-
     updateAuthMode();
 
   }
 );
 
-
-/* =========================
-   AUTH MESSAGE
-========================= */
-
-function showAuthMessage(
-  message,
-  type = "normal"
-) {
-
-  if (!authMessage) return;
-
-  authMessage.textContent =
-    message;
-
-  if (type === "error") {
-    authMessage.style.color =
-      "var(--bad)";
-  }
-
-  else if (type === "success") {
-    authMessage.style.color =
-      "var(--good)";
-  }
-
-  else {
-    authMessage.style.color =
-      "#ffd36b";
-  }
-
-}
-
-
-function clearAuthMessage() {
-
-  if (!authMessage) return;
-
-  authMessage.textContent = "";
-
-}
-
-
-/* =========================
-   LOGIN / SIGNUP
-========================= */
-
-submitAuth?.addEventListener(
+authModal?.addEventListener(
   "click",
-  handleAuth
-);
-
-
-passwordInput?.addEventListener(
-  "keydown",
   event => {
 
-    if (event.key === "Enter") {
-      handleAuth();
+    if (event.target === authModal) {
+      hideAuth();
     }
 
   }
 );
-
-
-emailInput?.addEventListener(
-  "keydown",
-  event => {
-
-    if (event.key === "Enter") {
-      passwordInput?.focus();
-    }
-
-  }
-);
-
 
 async function handleAuth() {
-
-  clearAuthMessage();
 
   const email =
     emailInput.value.trim();
@@ -1387,131 +1048,93 @@ async function handleAuth() {
   const password =
     passwordInput.value;
 
+  message("");
 
   if (!email) {
-
-    showAuthMessage(
+    message(
       "اكتب البريد الإلكتروني.",
       "error"
     );
-
     return;
-
   }
 
-
-  if (!password || password.length < 6) {
-
-    showAuthMessage(
+  if (password.length < 6) {
+    message(
       "كلمة المرور يجب أن تكون 6 أحرف على الأقل.",
       "error"
     );
-
     return;
-
   }
-
 
   if (!supabaseClient) {
 
-    showAuthMessage(
-      "تعذر الاتصال بخدمة الحسابات.",
+    message(
+      "خدمة الحسابات غير متاحة.",
       "error"
     );
 
     return;
-
   }
-
 
   submitAuth.disabled = true;
 
-  submitAuth.textContent =
-    "جارٍ التنفيذ...";
-
-
   try {
+
+    let result;
 
     if (authMode === "signup") {
 
-      const {
-        data,
-        error
-      } =
+      result =
         await supabaseClient.auth.signUp({
           email,
           password
         });
 
-
-      if (error) {
-        throw error;
-      }
-
-
-      if (data?.session) {
-
-        showAuthMessage(
-          "تم إنشاء الحساب وتسجيل الدخول.",
-          "success"
-        );
-
-        await refreshAuth();
-
-        setTimeout(
-          hideAuthModal,
-          700
-        );
-
-      } else {
-
-        showAuthMessage(
-          "تم إنشاء الحساب. تحقق من بريدك الإلكتروني إذا طلب منك ذلك.",
-          "success"
-        );
-
-      }
-
     } else {
 
-      const {
-        error
-      } =
+      result =
         await supabaseClient.auth.signInWithPassword({
           email,
           password
         });
+    }
 
+    if (result.error) {
+      throw result.error;
+    }
 
-      if (error) {
-        throw error;
-      }
+    if (
+      authMode === "signup" &&
+      !result.data.session
+    ) {
 
+      message(
+        "تم إنشاء الحساب. تحقق من بريدك الإلكتروني.",
+        "success"
+      );
 
-      showAuthMessage(
+    } else {
+
+      message(
         "تم تسجيل الدخول بنجاح.",
         "success"
       );
 
-
-      await refreshAuth();
-
-
       setTimeout(
-        hideAuthModal,
+        hideAuth,
         700
       );
-
     }
+
+    updateAuth();
 
   } catch (error) {
 
     console.error(error);
 
-    showAuthMessage(
-      translateAuthError(
-        error?.message
-      ),
+    message(
+      error.message ||
+      "حدث خطأ.",
       "error"
     );
 
@@ -1520,118 +1143,49 @@ async function handleAuth() {
     submitAuth.disabled = false;
 
     updateAuthMode();
-
   }
-
 }
 
+submitAuth?.addEventListener(
+  "click",
+  handleAuth
+);
 
 /* =========================
-   AUTH ERROR TRANSLATION
-========================= */
-
-function translateAuthError(
-  message
-) {
-
-  const text =
-    String(message || "")
-      .toLowerCase();
-
-
-  if (
-    text.includes("invalid login") ||
-    text.includes("invalid credentials")
-  ) {
-
-    return "البريد الإلكتروني أو كلمة المرور غير صحيحة.";
-
-  }
-
-
-  if (
-    text.includes("user already registered")
-  ) {
-
-    return "هذا البريد مسجل مسبقًا. جرّب تسجيل الدخول.";
-
-  }
-
-
-  if (
-    text.includes("password")
-  ) {
-
-    return "تحقق من كلمة المرور. يجب أن تكون 6 أحرف على الأقل.";
-
-  }
-
-
-  if (
-    text.includes("email")
-  ) {
-
-    return "تحقق من البريد الإلكتروني.";
-
-  }
-
-
-  return message ||
-    "حدث خطأ. حاول مرة أخرى.";
-
-}
-
-
-/* =========================
-   AUTH UI
+   حالة الحساب
 ========================= */
 
 function renderLoggedOut() {
 
   authArea.innerHTML = `
-
     <button
       class="btn"
-      id="openAuthDynamic">
+      id="dynamicAuth">
       دخول / تسجيل
     </button>
-
   `;
 
-
   document
-    .getElementById(
-      "openAuthDynamic"
-    )
+    .getElementById("dynamicAuth")
     ?.addEventListener(
       "click",
-      () => showAuthModal("login")
+      () => showAuth("login")
     );
-
 }
-
 
 function renderLoggedIn(user) {
 
   const email =
     user?.email || "المستخدم";
 
-  const firstLetter =
-    email
-      .charAt(0)
-      .toUpperCase();
-
-
-  const scores =
-    getLocalScores();
-
+  const letter =
+    email.charAt(0).toUpperCase();
 
   authArea.innerHTML = `
-
     <div class="profile">
 
       <div class="avatar">
-        ${escapeHTML(firstLetter)}
+        ${escapeHTML(letter)}
       </div>
 
       <button
@@ -1641,123 +1195,64 @@ function renderLoggedIn(user) {
       </button>
 
     </div>
-
   `;
 
+  document
+    .getElementById("logoutButton")
+    ?.addEventListener(
+      "click",
+      async () => {
 
-  const logoutButton =
-    document.getElementById(
-      "logoutButton"
+        await supabaseClient.auth.signOut();
+
+      }
     );
-
-
-  logoutButton?.addEventListener(
-    "click",
-    logout
-  );
-
-
-  console.log(
-    "ODDORA user:",
-    email,
-    "Local score:",
-    scores.total
-  );
-
 }
 
-
-async function refreshAuth() {
+async function updateAuth() {
 
   if (!supabaseClient) {
 
     renderLoggedOut();
 
     return;
-
   }
-
 
   try {
 
     const {
-      data,
-      error
+      data
     } =
       await supabaseClient.auth.getSession();
 
-
-    if (error) {
-      throw error;
-    }
-
-
-    currentUser =
+    const user =
       data?.session?.user || null;
 
-
-    if (currentUser) {
-      renderLoggedIn(
-        currentUser
-      );
+    if (user) {
+      renderLoggedIn(user);
     } else {
       renderLoggedOut();
     }
 
   } catch (error) {
 
-    console.error(
-      "Auth refresh error:",
-      error
-    );
-
-    currentUser = null;
-
-    renderLoggedOut();
-
-  }
-
-}
-
-
-async function logout() {
-
-  try {
-
-    if (supabaseClient) {
-      await supabaseClient.auth.signOut();
-    }
-
-  } catch (error) {
-
     console.error(error);
 
+    renderLoggedOut();
   }
-
-
-  currentUser = null;
-
-  renderLoggedOut();
-
 }
-
-
-/* =========================
-   SUPABASE AUTH LISTENER
-========================= */
 
 if (supabaseClient) {
 
   supabaseClient.auth.onAuthStateChange(
-    (event, session) => {
+    (
+      event,
+      session
+    ) => {
 
-      currentUser =
-        session?.user || null;
-
-
-      if (currentUser) {
+      if (session?.user) {
         renderLoggedIn(
-          currentUser
+          session.user
         );
       } else {
         renderLoggedOut();
@@ -1765,23 +1260,12 @@ if (supabaseClient) {
 
     }
   );
-
 }
-
 
 /* =========================
-   INITIALIZATION
+   تشغيل الموقع
 ========================= */
 
-function initializeApp() {
+renderGames();
 
-  renderGames();
-
-  updateAuthMode();
-
-  refreshAuth();
-
-}
-
-
-initializeApp();
+updateAuth();
