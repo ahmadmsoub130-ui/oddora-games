@@ -1,3 +1,7 @@
+/* =========================================================
+   ODDORA GAMES - APP.JS
+   ========================================================= */
+
 const SUPABASE_URL = "https://xywhwqbfzfvwjdthchjz.supabase.co";
 const SUPABASE_KEY = "sb_publishable_31E-JTjhC4YxVIxrYHwfKA_4v4RbeZs";
 
@@ -17,50 +21,9 @@ if (
   }
 }
 
-const games = [
-  {
-    id: "reaction",
-    name: "Reaction Rush",
-    icon: "⚡",
-    description: "Test your reaction speed. Tap as fast as you can!",
-    play: startReactionGame
-  },
-  {
-    id: "click",
-    name: "Click Storm",
-    icon: "👆",
-    description: "Click as many times as possible before time runs out.",
-    play: startClickGame
-  },
-  {
-    id: "math",
-    name: "Quick Math",
-    icon: "🧠",
-    description: "Solve mathematical challenges before the timer ends.",
-    play: startMathGame
-  },
-  {
-    id: "memory",
-    name: "Memory Match",
-    icon: "🃏",
-    description: "Remember the cards and find matching pairs.",
-    play: startMemoryGame
-  },
-  {
-    id: "target",
-    name: "Target Tap",
-    icon: "🎯",
-    description: "Hit the moving target as quickly as possible.",
-    play: startTargetGame
-  },
-  {
-    id: "color",
-    name: "Color Switch",
-    icon: "🌈",
-    description: "Choose the correct color before time runs out.",
-    play: startColorGame
-  }
-];
+/* =========================================================
+   ELEMENTS
+   ========================================================= */
 
 const gameGrid = document.getElementById("gameGrid");
 const gameModal = document.getElementById("gameModal");
@@ -72,12 +35,93 @@ const leaderboardBox = document.getElementById("leaderboardBox");
 
 let currentGame = null;
 let timer = null;
-let score = 0;
+let activeTimeouts = [];
+
+/* =========================================================
+   GAMES
+   ========================================================= */
+
+const games = [
+  {
+    id: "reaction",
+    name: "Reaction Rush",
+    icon: "⚡",
+    description: "Test your reaction speed.",
+    play: startReactionGame
+  },
+  {
+    id: "click",
+    name: "Click Storm",
+    icon: "👆",
+    description: "Click as fast as possible in 10 seconds.",
+    play: startClickGame
+  },
+  {
+    id: "math",
+    name: "Quick Math",
+    icon: "🧠",
+    description: "Solve mathematical challenges.",
+    play: startMathGame
+  },
+  {
+    id: "memory",
+    name: "Memory Match",
+    icon: "🃏",
+    description: "Find all matching pairs.",
+    play: startMemoryGame
+  },
+  {
+    id: "target",
+    name: "Target Tap",
+    icon: "🎯",
+    description: "Hit the moving target.",
+    play: startTargetGame
+  },
+  {
+    id: "color",
+    name: "Color Switch",
+    icon: "🌈",
+    description: "Choose the correct color.",
+    play: startColorGame
+  }
+];
+
+/* =========================================================
+   GENERAL FUNCTIONS
+   ========================================================= */
+
+function clearGameTimers() {
+  clearInterval(timer);
+  timer = null;
+
+  activeTimeouts.forEach(id => clearTimeout(id));
+  activeTimeouts = [];
+}
+
+function addTimeout(callback, delay) {
+  const id = setTimeout(callback, delay);
+  activeTimeouts.push(id);
+  return id;
+}
 
 function renderGames(list = games) {
   if (!gameGrid) return;
 
   gameGrid.innerHTML = "";
+
+  if (list.length === 0) {
+    gameGrid.innerHTML = `
+      <div style="
+        grid-column:1/-1;
+        text-align:center;
+        padding:40px;
+        opacity:.7;
+      ">
+        No games found.
+      </div>
+    `;
+    return;
+  }
 
   list.forEach(game => {
     const card = document.createElement("div");
@@ -90,7 +134,9 @@ function renderGames(list = games) {
       <button class="play-button">PLAY NOW</button>
     `;
 
-    card.querySelector("button").addEventListener("click", () => {
+    const button = card.querySelector(".play-button");
+
+    button.addEventListener("click", () => {
       openGame(game);
     });
 
@@ -99,20 +145,33 @@ function renderGames(list = games) {
 }
 
 function openGame(game) {
+  clearGameTimers();
+
   currentGame = game;
-  clearInterval(timer);
 
   if (!gameModal || !gameArea) return;
 
   gameModal.classList.remove("hidden");
   gameArea.innerHTML = "";
 
-  game.play();
+  try {
+    game.play();
+  } catch (error) {
+    console.error(error);
+
+    gameArea.innerHTML = `
+      <h2>Game Error</h2>
+      <p>Please try again.</p>
+      <button class="game-action" onclick="closeGame()">
+        CLOSE
+      </button>
+    `;
+  }
 }
 
 function closeGame() {
-  clearInterval(timer);
-  timer = null;
+  clearGameTimers();
+
   currentGame = null;
 
   if (gameModal) {
@@ -124,83 +183,81 @@ function closeGame() {
   }
 }
 
-if (closeModal) {
-  closeModal.addEventListener("click", closeGame);
-}
-
-if (gameModal) {
-  gameModal.addEventListener("click", e => {
-    if (e.target === gameModal) {
-      closeGame();
-    }
-  });
-}
-
-document.addEventListener("keydown", e => {
-  if (e.key === "Escape") {
-    closeGame();
-  }
-});
-
-if (search) {
-  search.addEventListener("input", e => {
-    const value = e.target.value.toLowerCase().trim();
-
-    const filtered = games.filter(game =>
-      game.name.toLowerCase().includes(value) ||
-      game.description.toLowerCase().includes(value)
-    );
-
-    renderGames(filtered);
-  });
-}
-
-function showGameTitle(title, description = "") {
-  gameArea.innerHTML = `
-    <h2>${title}</h2>
-    ${description ? `<p>${description}</p>` : ""}
-  `;
-}
-
 function addButton(text, callback) {
   const button = document.createElement("button");
+
   button.className = "game-action";
   button.textContent = text;
+
   button.addEventListener("click", callback);
+
   gameArea.appendChild(button);
+
   return button;
 }
 
 function showScore(finalScore) {
+  clearGameTimers();
+
+  const safeScore = Math.max(0, Math.floor(Number(finalScore) || 0));
+
   gameArea.innerHTML = `
     <h2>Game Over</h2>
-    <div class="big-score">${finalScore}</div>
+
+    <div class="big-score">
+      ${safeScore}
+    </div>
+
     <p>Your score</p>
   `;
 
   addButton("PLAY AGAIN", () => {
-    if (currentGame) currentGame.play();
+    if (currentGame) {
+      currentGame.play();
+    }
   });
 
-  saveScore(finalScore);
+  addButton("CLOSE", closeGame);
+
+  saveScore(safeScore);
 }
 
-/* =========================
+/* =========================================================
    REACTION RUSH
-========================= */
+   ========================================================= */
 
 function startReactionGame() {
-  clearInterval(timer);
+  clearGameTimers();
 
   gameArea.innerHTML = `
     <h2>Reaction Rush</h2>
-    <p>Wait for the button to turn green, then tap it!</p>
-    <div id="reactionStatus" style="margin:25px 0;font-size:20px;">
+
+    <p>
+      Wait until the button turns green.
+      Then tap as quickly as possible.
+    </p>
+
+    <div
+      id="reactionStatus"
+      style="
+        margin:25px 0;
+        font-size:20px;
+        font-weight:700;
+      "
+    >
       Get ready...
     </div>
-    <button id="reactionButton"
+
+    <button
+      id="reactionButton"
       class="game-action"
-      style="width:100%;height:120px;background:#333;">
+      style="
+        width:100%;
+        height:120px;
+        background:#333;
+        font-size:25px;
+      "
+    >
       WAIT
     </button>
   `;
@@ -208,13 +265,13 @@ function startReactionGame() {
   const button = document.getElementById("reactionButton");
   const status = document.getElementById("reactionStatus");
 
-  let startTime = 0;
   let active = false;
   let finished = false;
+  let startTime = 0;
 
   const delay = 1500 + Math.random() * 3000;
 
-  const timeout = setTimeout(() => {
+  addTimeout(() => {
     if (finished) return;
 
     active = true;
@@ -229,7 +286,6 @@ function startReactionGame() {
     if (finished) return;
 
     if (!active) {
-      clearTimeout(timeout);
       finished = true;
 
       gameArea.innerHTML = `
@@ -243,36 +299,54 @@ function startReactionGame() {
 
     finished = true;
 
-    const reaction = Math.round(performance.now() - startTime);
-    const reactionScore = Math.max(1, 1000 - reaction);
+    const reaction =
+      Math.round(performance.now() - startTime);
+
+    const reactionScore =
+      Math.max(1, 1000 - reaction);
 
     showScore(reactionScore);
   });
 }
 
-/* =========================
+/* =========================================================
    CLICK STORM
-========================= */
+   ========================================================= */
 
 function startClickGame() {
-  clearInterval(timer);
+  clearGameTimers();
 
   let clicks = 0;
   let seconds = 10;
 
   gameArea.innerHTML = `
     <h2>Click Storm</h2>
-    <p>Click as many times as possible in 10 seconds.</p>
+
+    <p>
+      Click as many times as possible in 10 seconds.
+    </p>
 
     <div style="font-size:24px;margin:20px;">
-      Time: <strong id="clickTime">10</strong>
+      Time:
+      <strong id="clickTime">10</strong>
     </div>
 
-    <div class="big-score" id="clickScore">0</div>
+    <div
+      class="big-score"
+      id="clickScore"
+    >
+      0
+    </div>
 
-    <button id="clickButton"
+    <button
+      id="clickButton"
       class="game-action"
-      style="width:100%;height:120px;font-size:28px;">
+      style="
+        width:100%;
+        height:120px;
+        font-size:28px;
+      "
+    >
       CLICK!
     </button>
   `;
@@ -293,17 +367,19 @@ function startClickGame() {
 
     if (seconds <= 0) {
       clearInterval(timer);
+      timer = null;
+
       showScore(clicks);
     }
   }, 1000);
 }
 
-/* =========================
+/* =========================================================
    QUICK MATH
-========================= */
+   ========================================================= */
 
 function startMathGame() {
-  clearInterval(timer);
+  clearGameTimers();
 
   let points = 0;
   let seconds = 20;
@@ -311,22 +387,34 @@ function startMathGame() {
 
   gameArea.innerHTML = `
     <h2>Quick Math</h2>
-    <p>Solve as many questions as possible.</p>
+
+    <p>
+      Solve as many questions as possible.
+    </p>
 
     <div style="font-size:22px;margin:15px;">
-      Time: <strong id="mathTime">20</strong>
+      Time:
+      <strong id="mathTime">20</strong>
     </div>
 
-    <div id="mathQuestion"
-      style="font-size:42px;font-weight:900;margin:25px;">
-    </div>
+    <div
+      id="mathQuestion"
+      style="
+        font-size:42px;
+        font-weight:900;
+        margin:25px;
+        text-align:center;
+      "
+    ></div>
 
-    <input id="mathInput"
+    <input
+      id="mathInput"
       type="number"
       inputmode="numeric"
       placeholder="Answer"
       style="
         width:100%;
+        box-sizing:border-box;
         padding:15px;
         border-radius:10px;
         border:1px solid #293253;
@@ -334,14 +422,19 @@ function startMathGame() {
         color:white;
         text-align:center;
         margin-bottom:15px;
-      ">
+      "
+    >
 
-    <button id="mathSubmit" class="game-action">
+    <button
+      id="mathSubmit"
+      class="game-action"
+    >
       SUBMIT
     </button>
 
     <div style="margin-top:20px;">
-      Score: <strong id="mathScore">0</strong>
+      Score:
+      <strong id="mathScore">0</strong>
     </div>
   `;
 
@@ -356,8 +449,11 @@ function startMathGame() {
     const b = Math.floor(Math.random() * 20) + 1;
 
     const operations = ["+", "-", "*"];
+
     const operation =
-      operations[Math.floor(Math.random() * operations.length)];
+      operations[
+        Math.floor(Math.random() * operations.length)
+      ];
 
     if (operation === "+") {
       answer = a + b;
@@ -371,8 +467,11 @@ function startMathGame() {
       answer = a * b;
     }
 
-    question.textContent = `${a} ${operation} ${b}`;
+    question.textContent =
+      `${a} ${operation} ${b}`;
+
     input.value = "";
+
     input.focus();
   }
 
@@ -387,8 +486,8 @@ function startMathGame() {
 
   submit.addEventListener("click", submitAnswer);
 
-  input.addEventListener("keydown", e => {
-    if (e.key === "Enter") {
+  input.addEventListener("keydown", event => {
+    if (event.key === "Enter") {
       submitAnswer();
     }
   });
@@ -402,21 +501,31 @@ function startMathGame() {
 
     if (seconds <= 0) {
       clearInterval(timer);
+      timer = null;
+
       showScore(points);
     }
   }, 1000);
 }
 
-/* =========================
+/* =========================================================
    MEMORY MATCH
-========================= */
+   ========================================================= */
 
 function startMemoryGame() {
-  clearInterval(timer);
+  clearGameTimers();
 
-  const symbols = ["🍎", "🍌", "🍇", "🍊"];
+  const symbols = [
+    "🍎",
+    "🍌",
+    "🍇",
+    "🍊",
+    "🍉",
+    "🥝"
+  ];
 
   let cards = [...symbols, ...symbols];
+
   cards.sort(() => Math.random() - 0.5);
 
   let first = null;
@@ -426,17 +535,21 @@ function startMemoryGame() {
 
   gameArea.innerHTML = `
     <h2>Memory Match</h2>
-    <p>Find all matching pairs.</p>
 
-    <div id="memoryGrid"
+    <p>
+      Find all matching pairs.
+    </p>
+
+    <div
+      id="memoryGrid"
       style="
         display:grid;
         grid-template-columns:repeat(4,1fr);
         gap:10px;
-        max-width:400px;
+        max-width:420px;
         margin:25px auto;
-      ">
-    </div>
+      "
+    ></div>
   `;
 
   const grid = document.getElementById("memoryGrid");
@@ -447,6 +560,8 @@ function startMemoryGame() {
     card.dataset.symbol = symbol;
     card.dataset.index = index;
 
+    card.textContent = "?";
+
     card.style.height = "75px";
     card.style.fontSize = "30px";
     card.style.border = "1px solid #343e66";
@@ -455,10 +570,14 @@ function startMemoryGame() {
     card.style.color = "#fff";
     card.style.cursor = "pointer";
 
-    card.textContent = "?";
-
     card.addEventListener("click", () => {
-      if (locked || card.classList.contains("matched")) return;
+      if (
+        locked ||
+        card.classList.contains("matched") ||
+        card === first
+      ) {
+        return;
+      }
 
       card.textContent = symbol;
 
@@ -470,22 +589,29 @@ function startMemoryGame() {
       second = card;
       locked = true;
 
-      if (first.dataset.symbol === second.dataset.symbol) {
+      if (
+        first.dataset.symbol ===
+        second.dataset.symbol
+      ) {
         first.classList.add("matched");
         second.classList.add("matched");
 
         matches++;
+
         first = null;
         second = null;
         locked = false;
 
         if (matches === symbols.length) {
-          showScore(100 * matches);
+          showScore(matches * 100);
         }
       } else {
-        setTimeout(() => {
-          first.textContent = "?";
-          second.textContent = "?";
+        const firstCard = first;
+        const secondCard = second;
+
+        addTimeout(() => {
+          firstCard.textContent = "?";
+          secondCard.textContent = "?";
 
           first = null;
           second = null;
@@ -498,25 +624,30 @@ function startMemoryGame() {
   });
 }
 
-/* =========================
+/* =========================================================
    TARGET TAP
-========================= */
+   ========================================================= */
 
 function startTargetGame() {
-  clearInterval(timer);
+  clearGameTimers();
 
   let points = 0;
   let seconds = 15;
 
   gameArea.innerHTML = `
     <h2>Target Tap</h2>
-    <p>Hit the target as many times as possible.</p>
+
+    <p>
+      Hit the target as many times as possible.
+    </p>
 
     <div style="margin:15px;">
-      Time: <strong id="targetTime">15</strong>
+      Time:
+      <strong id="targetTime">15</strong>
     </div>
 
-    <div id="targetArena"
+    <div
+      id="targetArena"
       style="
         position:relative;
         height:320px;
@@ -525,9 +656,11 @@ function startTargetGame() {
         border-radius:16px;
         overflow:hidden;
         margin-top:20px;
-      ">
+      "
+    >
 
-      <button id="targetButton"
+      <button
+        id="targetButton"
         style="
           position:absolute;
           width:65px;
@@ -538,32 +671,50 @@ function startTargetGame() {
           color:white;
           font-weight:900;
           cursor:pointer;
-        ">
+        "
+      >
         TAP
       </button>
+
     </div>
 
     <div style="margin-top:20px;">
-      Score: <strong id="targetScore">0</strong>
+      Score:
+      <strong id="targetScore">0</strong>
     </div>
   `;
 
-  const arena = document.getElementById("targetArena");
-  const button = document.getElementById("targetButton");
-  const timeDisplay = document.getElementById("targetTime");
-  const scoreDisplay = document.getElementById("targetScore");
+  const arena =
+    document.getElementById("targetArena");
+
+  const button =
+    document.getElementById("targetButton");
+
+  const timeDisplay =
+    document.getElementById("targetTime");
+
+  const scoreDisplay =
+    document.getElementById("targetScore");
 
   function moveTarget() {
-    const maxX = arena.clientWidth - 65;
-    const maxY = arena.clientHeight - 65;
+    const maxX =
+      Math.max(0, arena.clientWidth - 65);
 
-    button.style.left = Math.random() * maxX + "px";
-    button.style.top = Math.random() * maxY + "px";
+    const maxY =
+      Math.max(0, arena.clientHeight - 65);
+
+    button.style.left =
+      Math.random() * maxX + "px";
+
+    button.style.top =
+      Math.random() * maxY + "px";
   }
 
   button.addEventListener("click", () => {
     points++;
+
     scoreDisplay.textContent = points;
+
     moveTarget();
   });
 
@@ -576,23 +727,37 @@ function startTargetGame() {
 
     if (seconds <= 0) {
       clearInterval(timer);
+      timer = null;
+
       showScore(points);
     }
   }, 1000);
 }
 
-/* =========================
+/* =========================================================
    COLOR SWITCH
-========================= */
+   ========================================================= */
 
 function startColorGame() {
-  clearInterval(timer);
+  clearGameTimers();
 
   const colors = [
-    { name: "RED", value: "#ef4444" },
-    { name: "BLUE", value: "#3b82f6" },
-    { name: "GREEN", value: "#22c55e" },
-    { name: "YELLOW", value: "#eab308" }
+    {
+      name: "RED",
+      value: "#ef4444"
+    },
+    {
+      name: "BLUE",
+      value: "#3b82f6"
+    },
+    {
+      name: "GREEN",
+      value: "#22c55e"
+    },
+    {
+      name: "YELLOW",
+      value: "#eab308"
+    }
   ];
 
   let points = 0;
@@ -601,46 +766,76 @@ function startColorGame() {
 
   gameArea.innerHTML = `
     <h2>Color Switch</h2>
-    <p>Tap the button that matches the requested color.</p>
 
-    <div style="margin:15px;font-size:22px;">
-      Time: <strong id="colorTime">20</strong>
+    <p>
+      Tap the button that matches the requested color.
+    </p>
+
+    <div
+      style="
+        margin:15px;
+        font-size:22px;
+      "
+    >
+      Time:
+      <strong id="colorTime">20</strong>
     </div>
 
-    <div id="colorQuestion"
-      style="font-size:30px;font-weight:900;margin:25px;">
-    </div>
+    <div
+      id="colorQuestion"
+      style="
+        font-size:30px;
+        font-weight:900;
+        margin:25px;
+      "
+    ></div>
 
-    <div id="colorButtons"
+    <div
+      id="colorButtons"
       style="
         display:grid;
         grid-template-columns:1fr 1fr;
         gap:12px;
-      ">
-    </div>
+      "
+    ></div>
 
     <div style="margin-top:20px;">
-      Score: <strong id="colorScore">0</strong>
+      Score:
+      <strong id="colorScore">0</strong>
     </div>
   `;
 
-  const question = document.getElementById("colorQuestion");
-  const buttons = document.getElementById("colorButtons");
-  const timeDisplay = document.getElementById("colorTime");
-  const scoreDisplay = document.getElementById("colorScore");
+  const question =
+    document.getElementById("colorQuestion");
+
+  const buttons =
+    document.getElementById("colorButtons");
+
+  const timeDisplay =
+    document.getElementById("colorTime");
+
+  const scoreDisplay =
+    document.getElementById("colorScore");
 
   function newRound() {
     buttons.innerHTML = "";
 
     correctColor =
-      colors[Math.floor(Math.random() * colors.length)];
+      colors[
+        Math.floor(Math.random() * colors.length)
+      ];
 
-    question.textContent = correctColor.name;
+    question.textContent =
+      correctColor.name;
 
-    const shuffled = [...colors].sort(() => Math.random() - 0.5);
+    const shuffled =
+      [...colors].sort(
+        () => Math.random() - 0.5
+      );
 
     shuffled.forEach(color => {
-      const button = document.createElement("button");
+      const button =
+        document.createElement("button");
 
       button.textContent = color.name;
 
@@ -653,13 +848,18 @@ function startColorGame() {
       button.style.cursor = "pointer";
 
       button.addEventListener("click", () => {
-        if (color.name === correctColor.name) {
+        if (
+          color.name ===
+          correctColor.name
+        ) {
           points++;
         } else {
-          points = Math.max(0, points - 1);
+          points =
+            Math.max(0, points - 1);
         }
 
-        scoreDisplay.textContent = points;
+        scoreDisplay.textContent =
+          points;
 
         newRound();
       });
@@ -677,14 +877,16 @@ function startColorGame() {
 
     if (seconds <= 0) {
       clearInterval(timer);
+      timer = null;
+
       showScore(points);
     }
   }, 1000);
 }
 
-/* =========================
-   LOGIN / ACCOUNT
-========================= */
+/* =========================================================
+   LOGIN
+   ========================================================= */
 
 function updateLoginButton() {
   if (!loginBtn) return;
@@ -694,13 +896,18 @@ function updateLoginButton() {
     return;
   }
 
-  supabaseClient.auth.getUser().then(({ data }) => {
-    if (data && data.user) {
-      loginBtn.textContent = "ACCOUNT";
-    } else {
+  supabaseClient.auth
+    .getUser()
+    .then(({ data }) => {
+      if (data && data.user) {
+        loginBtn.textContent = "ACCOUNT";
+      } else {
+        loginBtn.textContent = "SIGN IN";
+      }
+    })
+    .catch(() => {
       loginBtn.textContent = "SIGN IN";
-    }
-  });
+    });
 }
 
 async function openLogin() {
@@ -709,19 +916,25 @@ async function openLogin() {
     return;
   }
 
+  clearGameTimers();
+
   gameModal.classList.remove("hidden");
 
   gameArea.innerHTML = `
     <h2>ODDORA Account</h2>
 
-    <p>Sign in or create a new account.</p>
+    <p>
+      Sign in or create a new account.
+    </p>
 
     <input
       id="emailInput"
       type="email"
       placeholder="Email"
+      autocomplete="email"
       style="
         width:100%;
+        box-sizing:border-box;
         padding:14px;
         margin-bottom:12px;
         border-radius:10px;
@@ -735,8 +948,10 @@ async function openLogin() {
       id="passwordInput"
       type="password"
       placeholder="Password"
+      autocomplete="current-password"
       style="
         width:100%;
+        box-sizing:border-box;
         padding:14px;
         margin-bottom:15px;
         border-radius:10px;
@@ -746,107 +961,168 @@ async function openLogin() {
       "
     >
 
-    <div style="
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      justify-content:center;
-    ">
-      <button id="signInBtn" class="game-action">
+    <div
+      style="
+        display:flex;
+        gap:10px;
+        flex-wrap:wrap;
+        justify-content:center;
+      "
+    >
+
+      <button
+        id="signInBtn"
+        class="game-action"
+      >
         SIGN IN
       </button>
 
-      <button id="signUpBtn" class="game-action">
+      <button
+        id="signUpBtn"
+        class="game-action"
+      >
         CREATE ACCOUNT
       </button>
+
     </div>
 
-    <p id="loginMessage" style="margin-top:20px;"></p>
+    <p
+      id="loginMessage"
+      style="margin-top:20px;"
+    ></p>
   `;
 
-  const emailInput = document.getElementById("emailInput");
-  const passwordInput = document.getElementById("passwordInput");
-  const signInBtn = document.getElementById("signInBtn");
-  const signUpBtn = document.getElementById("signUpBtn");
-  const message = document.getElementById("loginMessage");
+  const emailInput =
+    document.getElementById("emailInput");
 
-  signInBtn.addEventListener("click", async () => {
-    const email = emailInput.value.trim();
-    const password = passwordInput.value;
+  const passwordInput =
+    document.getElementById("passwordInput");
 
-    if (!email || !password) {
-      message.textContent = "Enter email and password.";
-      return;
-    }
+  const signInBtn =
+    document.getElementById("signInBtn");
 
-    message.textContent = "Signing in...";
+  const signUpBtn =
+    document.getElementById("signUpBtn");
 
-    const { error } =
-      await supabaseClient.auth.signInWithPassword({
-        email,
-        password
-      });
+  const message =
+    document.getElementById("loginMessage");
 
-    if (error) {
-      message.textContent = error.message;
-      return;
-    }
+  signInBtn.addEventListener(
+    "click",
+    async () => {
+      const email =
+        emailInput.value.trim();
 
-    message.textContent = "Signed in successfully.";
+      const password =
+        passwordInput.value;
 
-    updateLoginButton();
+      if (!email || !password) {
+        message.textContent =
+          "Enter email and password.";
 
-    setTimeout(closeGame, 800);
-  });
+        return;
+      }
 
-  signUpBtn.addEventListener("click", async () => {
-    const email = emailInput.value.trim();
-    const password = passwordInput.value;
-
-    if (!email || !password) {
-      message.textContent = "Enter email and password.";
-      return;
-    }
-
-    if (password.length < 6) {
       message.textContent =
-        "Password must be at least 6 characters.";
-      return;
-    }
+        "Signing in...";
 
-    message.textContent = "Creating account...";
+      const { error } =
+        await supabaseClient.auth
+          .signInWithPassword({
+            email,
+            password
+          });
 
-    const { data, error } =
-      await supabaseClient.auth.signUp({
-        email,
-        password
-      });
+      if (error) {
+        message.textContent =
+          error.message;
 
-    if (error) {
-      message.textContent = error.message;
-      return;
-    }
+        return;
+      }
 
-    if (data.session) {
-      message.textContent = "Account created successfully.";
-    } else {
       message.textContent =
-        "Account created. Check your email if confirmation is required.";
-    }
+        "Signed in successfully.";
 
-    updateLoginButton();
-  });
+      updateLoginButton();
+
+      addTimeout(() => {
+        closeGame();
+      }, 800);
+    }
+  );
+
+  signUpBtn.addEventListener(
+    "click",
+    async () => {
+      const email =
+        emailInput.value.trim();
+
+      const password =
+        passwordInput.value;
+
+      if (!email || !password) {
+        message.textContent =
+          "Enter email and password.";
+
+        return;
+      }
+
+      if (password.length < 6) {
+        message.textContent =
+          "Password must be at least 6 characters.";
+
+        return;
+      }
+
+      message.textContent =
+        "Creating account...";
+
+      const { data, error } =
+        await supabaseClient.auth
+          .signUp({
+            email,
+            password
+          });
+
+      if (error) {
+        message.textContent =
+          error.message;
+
+        return;
+      }
+
+      if (data && data.session) {
+        message.textContent =
+          "Account created successfully.";
+
+        updateLoginButton();
+      } else {
+        message.textContent =
+          "Account created. Check your email if confirmation is required.";
+      }
+    }
+  );
 }
 
-async function accountMenu() {
-  if (!supabaseClient) return;
+/* =========================================================
+   ACCOUNT MENU
+   ========================================================= */
 
-  const { data } = await supabaseClient.auth.getUser();
+async function accountMenu() {
+  if (!supabaseClient) {
+    openLogin();
+    return;
+  }
+
+  const { data } =
+    await supabaseClient.auth.getUser();
 
   if (!data || !data.user) {
     openLogin();
     return;
   }
+
+  clearGameTimers();
 
   gameModal.classList.remove("hidden");
 
@@ -854,61 +1130,58 @@ async function accountMenu() {
     <h2>ODDORA Account</h2>
 
     <p>
-      ${data.user.email}
+      ${escapeHtml(data.user.email)}
     </p>
 
-    <button id="logoutBtn" class="game-action">
+    <button
+      id="logoutBtn"
+      class="game-action"
+    >
       SIGN OUT
     </button>
   `;
 
   document
     .getElementById("logoutBtn")
-    .addEventListener("click", async () => {
-      await supabaseClient.auth.signOut();
+    .addEventListener(
+      "click",
+      async () => {
+        await supabaseClient.auth.signOut();
 
-      updateLoginButton();
-      closeGame();
-    });
+        updateLoginButton();
+
+        closeGame();
+      }
+    );
 }
 
-if (loginBtn) {
-  loginBtn.addEventListener("click", async () => {
-    if (!supabaseClient) {
-      openLogin();
-      return;
-    }
+function escapeHtml(value) {
+  const div = document.createElement("div");
 
-    const { data } = await supabaseClient.auth.getUser();
+  div.textContent = value;
 
-    if (data && data.user) {
-      accountMenu();
-    } else {
-      openLogin();
-    }
-  });
+  return div.innerHTML;
 }
 
-if (supabaseClient) {
-  supabaseClient.auth.onAuthStateChange(() => {
-    updateLoginButton();
-  });
-}
-
-/* =========================
+/* =========================================================
    SAVE SCORE
-========================= */
+   ========================================================= */
 
 async function saveScore(finalScore) {
   if (!currentGame) return;
 
-  const localKey = `oddora_${currentGame.id}_scores`;
+  const gameId = currentGame.id;
+
+  const localKey =
+    `oddora_${gameId}_scores`;
 
   let localScores = [];
 
   try {
     localScores =
-      JSON.parse(localStorage.getItem(localKey)) || [];
+      JSON.parse(
+        localStorage.getItem(localKey)
+      ) || [];
   } catch {
     localScores = [];
   }
@@ -918,129 +1191,297 @@ async function saveScore(finalScore) {
     date: new Date().toISOString()
   });
 
-  localScores.sort((a, b) => b.score - a.score);
+  localScores.sort(
+    (a, b) => b.score - a.score
+  );
 
-  localScores = localScores.slice(0, 10);
+  localScores =
+    localScores.slice(0, 10);
 
   localStorage.setItem(
     localKey,
     JSON.stringify(localScores)
   );
 
-  if (!supabaseClient) {
-    loadLeaderboard();
-    return;
-  }
+  /*
+    Optional Supabase leaderboard.
 
-  try {
-    const { data } =
-      await supabaseClient.auth.getUser();
+    This will only work if the appropriate
+    table/policies have been created in Supabase.
+  */
 
-    if (!data || !data.user) {
-      loadLeaderboard();
-      return;
+  if (supabaseClient) {
+    try {
+      const { data } =
+        await supabaseClient.auth.getUser();
+
+      if (data && data.user) {
+        await supabaseClient
+          .from("scores")
+          .insert({
+            user_id: data.user.id,
+            game_id: gameId,
+            score: finalScore
+          });
+      }
+    } catch (error) {
+      console.log(
+        "Online score not saved:",
+        error
+      );
     }
-
-    await supabaseClient
-      .from("game_scores")
-      .insert({
-        user_id: data.user.id,
-        game_id: currentGame.id,
-        score: finalScore
-      });
-  } catch (error) {
-    console.error("Score save error:", error);
   }
 
   loadLeaderboard();
 }
 
-/* =========================
+/* =========================================================
    LEADERBOARD
-========================= */
+   ========================================================= */
+
+function getLocalLeaderboard() {
+  const allScores = [];
+
+  games.forEach(game => {
+    const key =
+      `oddora_${game.id}_scores`;
+
+    let scores = [];
+
+    try {
+      scores =
+        JSON.parse(
+          localStorage.getItem(key)
+        ) || [];
+    } catch {
+      scores = [];
+    }
+
+    scores.forEach(item => {
+      allScores.push({
+        game: game.name,
+        icon: game.icon,
+        score: Number(item.score) || 0,
+        date: item.date
+      });
+    });
+  });
+
+  allScores.sort(
+    (a, b) => b.score - a.score
+  );
+
+  return allScores.slice(0, 10);
+}
 
 async function loadLeaderboard() {
   if (!leaderboardBox) return;
 
   leaderboardBox.innerHTML = `
-    <div class="score-row">
-      <span class="score-name">Loading scores...</span>
+    <div style="padding:20px;text-align:center;">
+      Loading scores...
     </div>
   `;
 
-  if (!supabaseClient) {
+  let scores = [];
+
+  if (supabaseClient) {
+    try {
+      const result =
+        await supabaseClient
+          .from("scores")
+          .select(
+            "game_id, score, created_at"
+          )
+          .order("score", {
+            ascending: false
+          })
+          .limit(10);
+
+      if (
+        !result.error &&
+        Array.isArray(result.data)
+      ) {
+        scores =
+          result.data.map(item => {
+            const game =
+              games.find(
+                g =>
+                  g.id === item.game_id
+              );
+
+            return {
+              game:
+                game?.name ||
+                item.game_id,
+              icon:
+                game?.icon ||
+                "🎮",
+              score:
+                Number(item.score) || 0,
+              date:
+                item.created_at
+            };
+          });
+      }
+    } catch (error) {
+      console.log(
+        "Online leaderboard unavailable."
+      );
+    }
+  }
+
+  if (scores.length === 0) {
+    scores = getLocalLeaderboard();
+  }
+
+  if (scores.length === 0) {
     leaderboardBox.innerHTML = `
-      <div class="score-row">
-        <span class="score-name">
-          Sign in to use the online leaderboard.
-        </span>
+      <div style="
+        text-align:center;
+        padding:25px;
+        opacity:.7;
+      ">
+        No scores yet.<br>
+        Play a game to create the first score.
       </div>
     `;
+
     return;
   }
 
-  try {
-    const { data, error } =
-      await supabaseClient
-        .from("game_scores")
-        .select("score, game_id, user_id")
-        .order("score", { ascending: false })
-        .limit(20);
+  leaderboardBox.innerHTML =
+    scores
+      .map(
+        (item, index) => `
+          <div style="
+            display:flex;
+            align-items:center;
+            gap:12px;
+            padding:14px;
+            border-bottom:1px solid rgba(255,255,255,.08);
+          ">
 
-    if (error) {
-      console.error(error);
+            <strong style="
+              width:30px;
+            ">
+              ${index + 1}
+            </strong>
 
-      leaderboardBox.innerHTML = `
-        <div class="score-row">
-          <span class="score-name">
-            Leaderboard is ready for signed-in players.
-          </span>
-        </div>
-      `;
+            <span style="
+              font-size:24px;
+            ">
+              ${item.icon}
+            </span>
 
-      return;
-    }
+            <span style="
+              flex:1;
+            ">
+              ${escapeHtml(item.game)}
+            </span>
 
-    if (!data || data.length === 0) {
-      leaderboardBox.innerHTML = `
-        <div class="score-row">
-          <span class="score-name">
-            No scores yet. Be the first!
-          </span>
-        </div>
-      `;
+            <strong>
+              ${item.score}
+            </strong>
 
-      return;
-    }
-
-    leaderboardBox.innerHTML = "";
-
-    data.forEach((item, index) => {
-      const row = document.createElement("div");
-
-      row.className = "score-row";
-
-      row.innerHTML = `
-        <span class="score-name">
-          #${index + 1} ${item.game_id}
-        </span>
-
-        <span class="score-value">
-          ${item.score}
-        </span>
-      `;
-
-      leaderboardBox.appendChild(row);
-    });
-  } catch (error) {
-    console.error("Leaderboard error:", error);
-  }
+          </div>
+        `
+      )
+      .join("");
 }
 
-/* =========================
-   START
-========================= */
+/* =========================================================
+   EVENTS
+   ========================================================= */
+
+if (closeModal) {
+  closeModal.addEventListener(
+    "click",
+    closeGame
+  );
+}
+
+if (gameModal) {
+  gameModal.addEventListener(
+    "click",
+    event => {
+      if (event.target === gameModal) {
+        closeGame();
+      }
+    }
+  );
+}
+
+document.addEventListener(
+  "keydown",
+  event => {
+    if (event.key === "Escape") {
+      closeGame();
+    }
+  }
+);
+
+if (search) {
+  search.addEventListener(
+    "input",
+    event => {
+      const value =
+        event.target.value
+          .toLowerCase()
+          .trim();
+
+      const filtered =
+        games.filter(game =>
+          game.name
+            .toLowerCase()
+            .includes(value) ||
+          game.description
+            .toLowerCase()
+            .includes(value)
+        );
+
+      renderGames(filtered);
+    }
+  );
+}
+
+if (loginBtn) {
+  loginBtn.addEventListener(
+    "click",
+    async () => {
+      if (!supabaseClient) {
+        openLogin();
+        return;
+      }
+
+      const { data } =
+        await supabaseClient.auth.getUser();
+
+      if (data && data.user) {
+        accountMenu();
+      } else {
+        openLogin();
+      }
+    }
+  );
+}
+
+if (supabaseClient) {
+  supabaseClient.auth.onAuthStateChange(
+    () => {
+      updateLoginButton();
+    }
+  );
+}
+
+/* =========================================================
+   STARTUP
+   ========================================================= */
 
 renderGames();
 updateLoginButton();
 loadLeaderboard();
+
+console.log(
+  "ODDORA Games loaded successfully."
+);
