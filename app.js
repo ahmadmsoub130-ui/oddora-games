@@ -1,1985 +1,1787 @@
-/* =========================================================
-   ODDORA GAMES — FINAL APP.JS
-   ========================================================= */
+/* =====================================================
+   ODDORA GAMES - APP.JS
+   ===================================================== */
+
+/* =========================
+   SUPABASE
+========================= */
 
 const SUPABASE_URL =
-  "https://xywhwqbfzfvwjdthchjz.supabase.co";
+  "https://mfhsjtrlrihhbqryajoc.supabase.co";
 
 const SUPABASE_KEY =
-  "sb_publishable_31E-JTjhC4YxVIxrYHwfKA_4v4RbeZs";
+  "sb_publishable_RpIsvyN1uDfQSSDnGBJEsw_L2OkdPJZ";
 
 let supabaseClient = null;
 
-if (
-  window.supabase &&
-  typeof window.supabase.createClient === "function"
-) {
-  try {
+try {
+  if (window.supabase) {
     supabaseClient = window.supabase.createClient(
       SUPABASE_URL,
       SUPABASE_KEY
     );
-  } catch (error) {
-    console.error("Supabase initialization error:", error);
   }
+} catch (error) {
+  console.error("Supabase initialization error:", error);
 }
 
-/* =========================================================
-   ELEMENTS
-   ========================================================= */
 
-const gameGrid =
-  document.getElementById("gameGrid");
+/* =========================
+   GLOBAL STATE
+========================= */
 
-const gameModal =
-  document.getElementById("gameModal");
-
-const gameArea =
-  document.getElementById("gameArea");
-
-const closeModal =
-  document.getElementById("closeModal");
-
-const loginBtn =
-  document.getElementById("loginBtn");
-
-const search =
-  document.getElementById("search");
-
-const leaderboardBox =
-  document.getElementById("leaderboardBox");
+let currentUser = null;
 
 let currentGame = null;
-let timer = null;
-let activeTimeouts = [];
 
-/* =========================================================
-   GAMES
-   ========================================================= */
+let currentQuestion = 0;
 
-const games = [
-  {
-    id: "reaction",
-    name: "Reaction Rush",
-    icon: "⚡",
-    description: "Test your reaction speed.",
-    play: startReactionGame
-  },
+let currentScore = 0;
 
-  {
-    id: "click",
-    name: "Click Storm",
-    icon: "👆",
-    description: "Click as fast as possible.",
-    play: startClickGame
-  },
+let tapCount = 0;
 
-  {
-    id: "math",
-    name: "Quick Math",
-    icon: "🧠",
-    description: "Solve mathematical challenges.",
-    play: startMathGame
-  },
+let tapTimeLeft = 0;
 
-  {
-    id: "memory",
-    name: "Memory Match",
-    icon: "🃏",
-    description: "Find all matching pairs.",
-    play: startMemoryGame
-  },
+let tapTimer = null;
 
-  {
-    id: "target",
-    name: "Target Tap",
-    icon: "🎯",
-    description: "Hit the moving target.",
-    play: startTargetGame
-  },
+let authMode = "login";
 
-  {
-    id: "color",
-    name: "Color Switch",
-    icon: "🌈",
-    description: "Choose the correct color.",
-    play: startColorGame
+let selectedCategory = "الكل";
+
+
+/* =========================
+   LOCAL STORAGE
+========================= */
+
+const STORAGE_KEY = "oddora_scores";
+
+function getLocalScores() {
+
+  try {
+
+    return JSON.parse(
+      localStorage.getItem(STORAGE_KEY)
+    ) || {
+      total: 0,
+      games: {}
+    };
+
+  } catch {
+
+    return {
+      total: 0,
+      games: {}
+    };
+
   }
-];
 
-/* =========================================================
+}
+
+
+function saveLocalScores(scores) {
+
+  localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify(scores)
+  );
+
+}
+
+
+function addScore(gameId, points) {
+
+  const scores = getLocalScores();
+
+  scores.total += points;
+
+  if (!scores.games[gameId]) {
+    scores.games[gameId] = 0;
+  }
+
+  scores.games[gameId] += points;
+
+  saveLocalScores(scores);
+
+}
+
+
+/* =========================
+   DOM
+========================= */
+
+const gamesGrid =
+  document.getElementById("gamesGrid");
+
+const searchInput =
+  document.getElementById("search");
+
+const filters =
+  document.getElementById("filters");
+
+const gameScreen =
+  document.getElementById("gameScreen");
+
+const gameContent =
+  document.getElementById("gameContent");
+
+const activeGameTitle =
+  document.getElementById("activeGameTitle");
+
+const closeGame =
+  document.getElementById("closeGame");
+
+const year =
+  document.getElementById("year");
+
+const authModal =
+  document.getElementById("authModal");
+
+const openAuth =
+  document.getElementById("openAuth");
+
+const openAuthHero =
+  document.getElementById("openAuthHero");
+
+const closeAuth =
+  document.getElementById("closeAuth");
+
+const loginMode =
+  document.getElementById("loginMode");
+
+const signupMode =
+  document.getElementById("signupMode");
+
+const authTitle =
+  document.getElementById("authTitle");
+
+const emailInput =
+  document.getElementById("email");
+
+const passwordInput =
+  document.getElementById("password");
+
+const submitAuth =
+  document.getElementById("submitAuth");
+
+const authMessage =
+  document.getElementById("authMessage");
+
+const authArea =
+  document.getElementById("authArea");
+
+
+if (year) {
+  year.textContent = new Date().getFullYear();
+}
+
+
+/* =========================
    HELPERS
-   ========================================================= */
+========================= */
 
-function clearGameTimers() {
-  if (timer) {
-    clearInterval(timer);
-    timer = null;
-  }
+function escapeHTML(value) {
 
-  activeTimeouts.forEach(id => {
-    clearTimeout(id);
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+
+}
+
+
+function normalizeArabic(text) {
+
+  return String(text || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[أإآ]/g, "ا")
+    .replace(/ة/g, "ه")
+    .replace(/ى/g, "ي")
+    .replace(/ؤ/g, "و")
+    .replace(/ئ/g, "ي")
+    .replace(/[\u064B-\u065F\u0670]/g, "");
+
+}
+
+
+/* =========================
+   GAME LIST
+========================= */
+
+function getFilteredGames() {
+
+  const search =
+    normalizeArabic(
+      searchInput?.value || ""
+    );
+
+  return GAMES.filter(game => {
+
+    const categoryMatch =
+      selectedCategory === "الكل" ||
+      game.category === selectedCategory;
+
+    const searchMatch =
+      !search ||
+      normalizeArabic(game.title)
+        .includes(search) ||
+      normalizeArabic(game.description)
+        .includes(search);
+
+    return categoryMatch && searchMatch;
+
   });
 
-  activeTimeouts = [];
 }
 
-function addTimeout(callback, delay) {
-  const id = setTimeout(callback, delay);
-  activeTimeouts.push(id);
-  return id;
-}
 
-function escapeHtml(value) {
-  const div = document.createElement("div");
-  div.textContent = String(value ?? "");
-  return div.innerHTML;
-}
-
-/* =========================================================
+/* =========================
    RENDER GAMES
-   ========================================================= */
+========================= */
 
-function renderGames(list = games) {
-  if (!gameGrid) return;
+function renderGames() {
 
-  gameGrid.innerHTML = "";
+  if (!gamesGrid) return;
 
-  if (!list.length) {
-    gameGrid.innerHTML = `
-      <div style="
-        grid-column:1/-1;
-        text-align:center;
-        padding:50px 20px;
-        color:#9da4bd;
-      ">
-        No games found.
+  const games =
+    getFilteredGames();
+
+  if (!games.length) {
+
+    gamesGrid.innerHTML = `
+      <div class="content-box"
+           style="grid-column:1/-1;text-align:center">
+        <h2>لم نجد اللعبة</h2>
+        <p>جرّب كلمة بحث أخرى.</p>
       </div>
     `;
 
     return;
+
   }
 
-  list.forEach(game => {
-    const card =
-      document.createElement("article");
 
-    card.className = "game-card";
+  gamesGrid.innerHTML =
+    games.map(game => `
 
-    card.innerHTML = `
-      <div class="game-icon">
-        ${game.icon}
-      </div>
+      <article class="game-card">
 
-      <h3>
-        ${escapeHtml(game.name)}
-      </h3>
+        <div>
 
-      <p>
-        ${escapeHtml(game.description)}
-      </p>
+          <div class="game-icon">
+            ${game.icon}
+          </div>
 
-      <button
-        class="play-button"
-        type="button"
-      >
-        PLAY NOW
-      </button>
-    `;
-
-    const playButton =
-      card.querySelector(".play-button");
-
-    playButton.addEventListener(
-      "click",
-      () => openGame(game)
-    );
-
-    gameGrid.appendChild(card);
-  });
-}
-
-/* =========================================================
-   OPEN / CLOSE GAME
-   ========================================================= */
-
-function openGame(game) {
-  clearGameTimers();
-
-  currentGame = game;
-
-  if (!gameModal || !gameArea) return;
-
-  gameModal.classList.remove("hidden");
-
-  gameArea.innerHTML = "";
-
-  try {
-    game.play();
-  } catch (error) {
-    console.error(error);
-
-    gameArea.innerHTML = `
-      <h2>Game Error</h2>
-
-      <p>
-        Something went wrong.
-        Please try again.
-      </p>
-    `;
-
-    addButton(
-      "TRY AGAIN",
-      () => game.play()
-    );
-
-    addButton(
-      "CLOSE",
-      closeGame
-    );
-  }
-}
-
-function closeGame() {
-  clearGameTimers();
-
-  currentGame = null;
-
-  if (gameModal) {
-    gameModal.classList.add("hidden");
-  }
-
-  if (gameArea) {
-    gameArea.innerHTML = "";
-  }
-}
-
-function addButton(text, callback) {
-  const button =
-    document.createElement("button");
-
-  button.className = "game-action";
-
-  button.type = "button";
-
-  button.textContent = text;
-
-  button.addEventListener(
-    "click",
-    callback
-  );
-
-  gameArea.appendChild(button);
-
-  return button;
-}
-
-/* =========================================================
-   SCORE SCREEN
-   ========================================================= */
-
-function showScore(finalScore) {
-  const gameAtFinish = currentGame;
-
-  clearGameTimers();
-
-  const safeScore =
-    Math.max(
-      0,
-      Math.floor(
-        Number(finalScore) || 0
-      )
-    );
-
-  gameArea.innerHTML = `
-    <h2>Game Over</h2>
-
-    <div class="big-score">
-      ${safeScore}
-    </div>
-
-    <p style="text-align:center;">
-      Your score
-    </p>
-  `;
-
-  addButton(
-    "PLAY AGAIN",
-    () => {
-      if (gameAtFinish) {
-        currentGame = gameAtFinish;
-        gameAtFinish.play();
-      }
-    }
-  );
-
-  addButton(
-    "CLOSE",
-    closeGame
-  );
-
-  saveScore(
-    safeScore,
-    gameAtFinish
-  );
-}
-
-/* =========================================================
-   REACTION RUSH
-   ========================================================= */
-
-function startReactionGame() {
-  clearGameTimers();
-
-  gameArea.innerHTML = `
-    <h2>Reaction Rush</h2>
-
-    <p>
-      Wait until the button turns green,
-      then tap as quickly as possible.
-    </p>
-
-    <div
-      id="reactionStatus"
-      style="
-        margin:25px 0;
-        font-size:20px;
-        font-weight:800;
-        text-align:center;
-      "
-    >
-      Get ready...
-    </div>
-
-    <button
-      id="reactionButton"
-      class="game-action"
-      type="button"
-      style="
-        width:100%;
-        height:120px;
-        background:#333;
-        font-size:25px;
-      "
-    >
-      WAIT
-    </button>
-  `;
-
-  const button =
-    document.getElementById(
-      "reactionButton"
-    );
-
-  const status =
-    document.getElementById(
-      "reactionStatus"
-    );
-
-  let active = false;
-  let finished = false;
-  let startTime = 0;
-
-  const delay =
-    1500 + Math.random() * 3000;
-
-  addTimeout(() => {
-    if (finished) return;
-
-    active = true;
-
-    startTime = performance.now();
-
-    button.style.background =
-      "#16c784";
-
-    button.textContent =
-      "TAP!";
-
-    status.textContent =
-      "GO!";
-  }, delay);
-
-  button.addEventListener(
-    "click",
-    () => {
-      if (finished) return;
-
-      if (!active) {
-        finished = true;
-
-        gameArea.innerHTML = `
-          <h2>Too Early!</h2>
+          <h3>
+            ${escapeHTML(game.title)}
+          </h3>
 
           <p>
-            You tapped before the signal.
+            ${escapeHTML(game.description)}
           </p>
-        `;
 
-        addButton(
-          "TRY AGAIN",
-          startReactionGame
-        );
+          <div class="game-category">
+            ${escapeHTML(game.category)}
+          </div>
 
-        return;
-      }
+        </div>
 
-      finished = true;
+        <button
+          class="btn"
+          data-play="${game.id}">
+          العب الآن
+        </button>
 
-      const reaction =
-        Math.round(
-          performance.now() - startTime
-        );
+      </article>
 
-      const score =
-        Math.max(
-          1,
-          1000 - reaction
-        );
+    `).join("");
 
-      showScore(score);
-    }
-  );
-}
 
-/* =========================================================
-   CLICK STORM
-   ========================================================= */
-
-function startClickGame() {
-  clearGameTimers();
-
-  let clicks = 0;
-  let seconds = 10;
-
-  gameArea.innerHTML = `
-    <h2>Click Storm</h2>
-
-    <p>
-      Click as many times as possible
-      in 10 seconds.
-    </p>
-
-    <div style="
-      font-size:24px;
-      margin:20px;
-      text-align:center;
-    ">
-      Time:
-      <strong id="clickTime">10</strong>
-    </div>
-
-    <div
-      class="big-score"
-      id="clickScore"
-    >
-      0
-    </div>
-
-    <button
-      id="clickButton"
-      class="game-action"
-      type="button"
-      style="
-        width:100%;
-        height:120px;
-        font-size:28px;
-      "
-    >
-      CLICK!
-    </button>
-  `;
-
-  const button =
-    document.getElementById(
-      "clickButton"
-    );
-
-  const timeDisplay =
-    document.getElementById(
-      "clickTime"
-    );
-
-  const scoreDisplay =
-    document.getElementById(
-      "clickScore"
-    );
-
-  button.addEventListener(
-    "click",
-    () => {
-      clicks++;
-
-      scoreDisplay.textContent =
-        clicks;
-    }
-  );
-
-  timer = setInterval(() => {
-    seconds--;
-
-    timeDisplay.textContent =
-      seconds;
-
-    if (seconds <= 0) {
-      clearInterval(timer);
-
-      timer = null;
-
-      showScore(clicks);
-    }
-  }, 1000);
-}
-
-/* =========================================================
-   QUICK MATH
-   ========================================================= */
-
-function startMathGame() {
-  clearGameTimers();
-
-  let points = 0;
-  let seconds = 20;
-  let answer = 0;
-
-  gameArea.innerHTML = `
-    <h2>Quick Math</h2>
-
-    <p>
-      Solve as many questions as possible.
-    </p>
-
-    <div style="
-      font-size:22px;
-      margin:15px;
-      text-align:center;
-    ">
-      Time:
-      <strong id="mathTime">20</strong>
-    </div>
-
-    <div
-      id="mathQuestion"
-      style="
-        font-size:42px;
-        font-weight:900;
-        margin:25px;
-        text-align:center;
-      "
-    ></div>
-
-    <input
-      id="mathInput"
-      type="number"
-      inputmode="numeric"
-      placeholder="Answer"
-      autocomplete="off"
-      style="
-        width:100%;
-        padding:15px;
-        border-radius:10px;
-        border:1px solid #293253;
-        background:#070914;
-        color:white;
-        text-align:center;
-        margin-bottom:15px;
-      "
-    >
-
-    <button
-      id="mathSubmit"
-      class="game-action"
-      type="button"
-    >
-      SUBMIT
-    </button>
-
-    <div style="
-      margin-top:20px;
-      text-align:center;
-    ">
-      Score:
-      <strong id="mathScore">0</strong>
-    </div>
-  `;
-
-  const question =
-    document.getElementById(
-      "mathQuestion"
-    );
-
-  const input =
-    document.getElementById(
-      "mathInput"
-    );
-
-  const submit =
-    document.getElementById(
-      "mathSubmit"
-    );
-
-  const scoreDisplay =
-    document.getElementById(
-      "mathScore"
-    );
-
-  const timeDisplay =
-    document.getElementById(
-      "mathTime"
-    );
-
-  function newQuestion() {
-    const a =
-      Math.floor(
-        Math.random() * 20
-      ) + 1;
-
-    const b =
-      Math.floor(
-        Math.random() * 20
-      ) + 1;
-
-    const operations =
-      ["+", "-", "*"];
-
-    const operation =
-      operations[
-        Math.floor(
-          Math.random() *
-          operations.length
-        )
-      ];
-
-    if (operation === "+") {
-      answer = a + b;
-    }
-
-    if (operation === "-") {
-      answer = a - b;
-    }
-
-    if (operation === "*") {
-      answer = a * b;
-    }
-
-    question.textContent =
-      `${a} ${operation} ${b}`;
-
-    input.value = "";
-
-    input.focus();
-  }
-
-  function submitAnswer() {
-    if (
-      Number(input.value) ===
-      answer
-    ) {
-      points++;
-
-      scoreDisplay.textContent =
-        points;
-    }
-
-    newQuestion();
-  }
-
-  submit.addEventListener(
-    "click",
-    submitAnswer
-  );
-
-  input.addEventListener(
-    "keydown",
-    event => {
-      if (event.key === "Enter") {
-        submitAnswer();
-      }
-    }
-  );
-
-  newQuestion();
-
-  timer = setInterval(() => {
-    seconds--;
-
-    timeDisplay.textContent =
-      seconds;
-
-    if (seconds <= 0) {
-      clearInterval(timer);
-
-      timer = null;
-
-      showScore(points);
-    }
-  }, 1000);
-}
-
-/* =========================================================
-   MEMORY MATCH
-   ========================================================= */
-
-function startMemoryGame() {
-  clearGameTimers();
-
-  const symbols = [
-    "🍎",
-    "🍌",
-    "🍇",
-    "🍊",
-    "🍉",
-    "🥝"
-  ];
-
-  let cards =
-    [...symbols, ...symbols];
-
-  cards.sort(
-    () => Math.random() - 0.5
-  );
-
-  let first = null;
-  let second = null;
-  let locked = false;
-  let matches = 0;
-
-  gameArea.innerHTML = `
-    <h2>Memory Match</h2>
-
-    <p>
-      Find all matching pairs.
-    </p>
-
-    <div
-      id="memoryGrid"
-      style="
-        display:grid;
-        grid-template-columns:repeat(4,1fr);
-        gap:10px;
-        max-width:420px;
-        margin:25px auto;
-      "
-    ></div>
-  `;
-
-  const grid =
-    document.getElementById(
-      "memoryGrid"
-    );
-
-  cards.forEach(
-    (symbol, index) => {
-      const card =
-        document.createElement(
-          "button"
-        );
-
-      card.type = "button";
-
-      card.dataset.symbol =
-        symbol;
-
-      card.dataset.index =
-        index;
-
-      card.textContent = "?";
-
-      card.style.height =
-        "75px";
-
-      card.style.fontSize =
-        "30px";
-
-      card.style.border =
-        "1px solid #343e66";
-
-      card.style.borderRadius =
-        "12px";
-
-      card.style.background =
-        "#070914";
-
-      card.style.color =
-        "#fff";
-
-      card.style.cursor =
-        "pointer";
-
-      card.addEventListener(
-        "click",
-        () => {
-          if (
-            locked ||
-            card.classList.contains(
-              "matched"
-            ) ||
-            card === first
-          ) {
-            return;
-          }
-
-          card.textContent =
-            symbol;
-
-          if (!first) {
-            first = card;
-            return;
-          }
-
-          second = card;
-
-          locked = true;
-
-          if (
-            first.dataset.symbol ===
-            second.dataset.symbol
-          ) {
-            first.classList.add(
-              "matched"
-            );
-
-            second.classList.add(
-              "matched"
-            );
-
-            matches++;
-
-            first = null;
-            second = null;
-            locked = false;
-
-            if (
-              matches ===
-              symbols.length
-            ) {
-              showScore(
-                matches * 100
-              );
-            }
-          } else {
-            const firstCard =
-              first;
-
-            const secondCard =
-              second;
-
-            addTimeout(
-              () => {
-                firstCard.textContent =
-                  "?";
-
-                secondCard.textContent =
-                  "?";
-
-                first = null;
-                second = null;
-                locked = false;
-              },
-              700
-            );
-          }
-        }
-      );
-
-      grid.appendChild(card);
-    }
-  );
-}
-
-/* =========================================================
-   TARGET TAP
-   ========================================================= */
-
-function startTargetGame() {
-  clearGameTimers();
-
-  let points = 0;
-  let seconds = 15;
-
-  gameArea.innerHTML = `
-    <h2>Target Tap</h2>
-
-    <p>
-      Hit the moving target as many
-      times as possible.
-    </p>
-
-    <div style="
-      margin:15px;
-      text-align:center;
-    ">
-      Time:
-      <strong id="targetTime">
-        15
-      </strong>
-    </div>
-
-    <div
-      id="targetArena"
-      style="
-        position:relative;
-        height:320px;
-        background:#070914;
-        border:1px solid #293253;
-        border-radius:16px;
-        overflow:hidden;
-        margin-top:20px;
-      "
-    >
-
-      <button
-        id="targetButton"
-        type="button"
-        style="
-          position:absolute;
-          width:65px;
-          height:65px;
-          border:0;
-          border-radius:50%;
-          background:#695cff;
-          color:white;
-          font-weight:900;
-          cursor:pointer;
-        "
-      >
-        TAP
-      </button>
-
-    </div>
-
-    <div style="
-      margin-top:20px;
-      text-align:center;
-    ">
-      Score:
-      <strong id="targetScore">
-        0
-      </strong>
-    </div>
-  `;
-
-  const arena =
-    document.getElementById(
-      "targetArena"
-    );
-
-  const button =
-    document.getElementById(
-      "targetButton"
-    );
-
-  const timeDisplay =
-    document.getElementById(
-      "targetTime"
-    );
-
-  const scoreDisplay =
-    document.getElementById(
-      "targetScore"
-    );
-
-  function moveTarget() {
-    const maxX =
-      Math.max(
-        0,
-        arena.clientWidth - 65
-      );
-
-    const maxY =
-      Math.max(
-        0,
-        arena.clientHeight - 65
-      );
-
-    button.style.left =
-      Math.random() * maxX +
-      "px";
-
-    button.style.top =
-      Math.random() * maxY +
-      "px";
-  }
-
-  button.addEventListener(
-    "click",
-    () => {
-      points++;
-
-      scoreDisplay.textContent =
-        points;
-
-      moveTarget();
-    }
-  );
-
-  moveTarget();
-
-  timer = setInterval(() => {
-    seconds--;
-
-    timeDisplay.textContent =
-      seconds;
-
-    if (seconds <= 0) {
-      clearInterval(timer);
-
-      timer = null;
-
-      showScore(points);
-    }
-  }, 1000);
-}
-
-/* =========================================================
-   COLOR SWITCH
-   ========================================================= */
-
-function startColorGame() {
-  clearGameTimers();
-
-  const colors = [
-    {
-      name: "RED",
-      value: "#ef4444"
-    },
-
-    {
-      name: "BLUE",
-      value: "#3b82f6"
-    },
-
-    {
-      name: "GREEN",
-      value: "#22c55e"
-    },
-
-    {
-      name: "YELLOW",
-      value: "#eab308"
-    }
-  ];
-
-  let points = 0;
-  let seconds = 20;
-  let correctColor = null;
-
-  gameArea.innerHTML = `
-    <h2>Color Switch</h2>
-
-    <p>
-      Tap the button that matches
-      the requested color.
-    </p>
-
-    <div style="
-      margin:15px;
-      font-size:22px;
-      text-align:center;
-    ">
-      Time:
-      <strong id="colorTime">
-        20
-      </strong>
-    </div>
-
-    <div
-      id="colorQuestion"
-      style="
-        font-size:30px;
-        font-weight:900;
-        margin:25px;
-        text-align:center;
-      "
-    ></div>
-
-    <div
-      id="colorButtons"
-      style="
-        display:grid;
-        grid-template-columns:1fr 1fr;
-        gap:12px;
-      "
-    ></div>
-
-    <div style="
-      margin-top:20px;
-      text-align:center;
-    ">
-      Score:
-      <strong id="colorScore">
-        0
-      </strong>
-    </div>
-  `;
-
-  const question =
-    document.getElementById(
-      "colorQuestion"
-    );
-
-  const buttons =
-    document.getElementById(
-      "colorButtons"
-    );
-
-  const timeDisplay =
-    document.getElementById(
-      "colorTime"
-    );
-
-  const scoreDisplay =
-    document.getElementById(
-      "colorScore"
-    );
-
-  function newRound() {
-    buttons.innerHTML = "";
-
-    correctColor =
-      colors[
-        Math.floor(
-          Math.random() *
-          colors.length
-        )
-      ];
-
-    question.textContent =
-      correctColor.name;
-
-    const shuffled =
-      [...colors].sort(
-        () => Math.random() - 0.5
-      );
-
-    shuffled.forEach(color => {
-      const button =
-        document.createElement(
-          "button"
-        );
-
-      button.type = "button";
-
-      button.textContent =
-        color.name;
-
-      button.style.padding =
-        "20px";
-
-      button.style.border =
-        "0";
-
-      button.style.borderRadius =
-        "12px";
-
-      button.style.background =
-        color.value;
-
-      button.style.color =
-        "#fff";
-
-      button.style.fontWeight =
-        "900";
-
-      button.style.cursor =
-        "pointer";
+  gamesGrid
+    .querySelectorAll("[data-play]")
+    .forEach(button => {
 
       button.addEventListener(
         "click",
         () => {
-          if (
-            color.name ===
-            correctColor.name
-          ) {
-            points++;
-          } else {
-            points =
-              Math.max(
-                0,
-                points - 1
-              );
-          }
 
-          scoreDisplay.textContent =
-            points;
+          const id =
+            Number(button.dataset.play);
 
-          newRound();
+          openGame(id);
+
         }
       );
 
-      buttons.appendChild(button);
     });
-  }
 
-  newRound();
-
-  timer = setInterval(() => {
-    seconds--;
-
-    timeDisplay.textContent =
-      seconds;
-
-    if (seconds <= 0) {
-      clearInterval(timer);
-
-      timer = null;
-
-      showScore(points);
-    }
-  }, 1000);
 }
 
-/* =========================================================
-   LOGIN BUTTON
-   ========================================================= */
 
-async function updateLoginButton() {
-  if (!loginBtn) return;
+/* =========================
+   OPEN GAME
+========================= */
 
-  if (!supabaseClient) {
-    loginBtn.textContent =
-      "SIGN IN";
+function openGame(id) {
 
-    return;
-  }
-
-  try {
-    const {
-      data,
-      error
-    } =
-      await supabaseClient.auth.getUser();
-
-    if (
-      !error &&
-      data &&
-      data.user
-    ) {
-      loginBtn.textContent =
-        "ACCOUNT";
-    } else {
-      loginBtn.textContent =
-        "SIGN IN";
-    }
-  } catch {
-    loginBtn.textContent =
-      "SIGN IN";
-  }
-}
-
-/* =========================================================
-   LOGIN / SIGN UP
-   ========================================================= */
-
-function openLogin() {
-  if (!supabaseClient) {
-    alert(
-      "Supabase is not connected."
+  const game =
+    GAMES.find(
+      item => item.id === id
     );
 
-    return;
+  if (!game) return;
+
+  currentGame = game;
+
+  currentQuestion = 0;
+
+  currentScore = 0;
+
+  tapCount = 0;
+
+  clearInterval(tapTimer);
+
+  if (activeGameTitle) {
+    activeGameTitle.textContent =
+      game.title;
   }
 
-  clearGameTimers();
+  if (gameScreen) {
+    gameScreen.hidden = false;
+  }
 
-  gameModal.classList.remove(
-    "hidden"
+  document
+    .getElementById("games")
+    ?.scrollIntoView({
+      behavior: "smooth"
+    });
+
+
+  if (game.type === "quiz") {
+    renderQuiz();
+  }
+
+  else if (game.type === "riddle") {
+    renderRiddle();
+  }
+
+  else if (game.type === "story") {
+    renderStory();
+  }
+
+  else if (game.type === "tap") {
+    renderTapGame();
+  }
+
+}
+
+
+/* =========================
+   CLOSE GAME
+========================= */
+
+function closeCurrentGame() {
+
+  clearInterval(tapTimer);
+
+  if (gameScreen) {
+    gameScreen.hidden = true;
+  }
+
+  if (gameContent) {
+    gameContent.innerHTML = "";
+  }
+
+  currentGame = null;
+
+  document
+    .getElementById("games")
+    ?.scrollIntoView({
+      behavior: "smooth"
+    });
+
+}
+
+
+closeGame?.addEventListener(
+  "click",
+  closeCurrentGame
+);
+
+
+/* =========================
+   QUIZ GAME
+========================= */
+
+function renderQuiz() {
+
+  const question =
+    currentGame.questions[currentQuestion];
+
+  if (!question) {
+
+    finishQuiz();
+
+    return;
+
+  }
+
+
+  const total =
+    currentGame.questions.length;
+
+  gameContent.innerHTML = `
+
+    <div class="scorebox">
+      السؤال ${currentQuestion + 1}
+      / ${total}
+    </div>
+
+    <div class="scorebox">
+      النقاط: ${currentScore}
+    </div>
+
+    <div class="question">
+      ${escapeHTML(question.q)}
+    </div>
+
+    <div class="answers">
+
+      ${question.answers.map(
+        (answer, index) => `
+
+          <button
+            class="answer"
+            data-answer="${index}">
+            ${escapeHTML(answer)}
+          </button>
+
+        `
+      ).join("")}
+
+    </div>
+
+    <div
+      class="result"
+      id="quizResult">
+    </div>
+
+  `;
+
+
+  gameContent
+    .querySelectorAll("[data-answer]")
+    .forEach(button => {
+
+      button.addEventListener(
+        "click",
+        () => {
+
+          handleQuizAnswer(
+            Number(button.dataset.answer),
+            button
+          );
+
+        }
+      );
+
+    });
+
+}
+
+
+function handleQuizAnswer(
+  selected,
+  clickedButton
+) {
+
+  const question =
+    currentGame.questions[currentQuestion];
+
+  const buttons =
+    gameContent.querySelectorAll(
+      "[data-answer]"
+    );
+
+  buttons.forEach(
+    button => {
+      button.disabled = true;
+    }
   );
 
-  gameArea.innerHTML = `
-    <h2>ODDORA Account</h2>
 
-    <p>
-      Sign in or create a new account.
-    </p>
+  if (selected === question.correct) {
 
-    <input
-      id="emailInput"
-      type="email"
-      placeholder="Email"
-      autocomplete="email"
-      style="
-        width:100%;
-        padding:14px;
-        margin-top:20px;
-        margin-bottom:12px;
-        border-radius:10px;
-        border:1px solid #293253;
-        background:#070914;
-        color:white;
-      "
-    >
+    currentScore += 10;
 
-    <input
-      id="passwordInput"
-      type="password"
-      placeholder="Password"
-      autocomplete="current-password"
-      style="
-        width:100%;
-        padding:14px;
-        margin-bottom:15px;
-        border-radius:10px;
-        border:1px solid #293253;
-        background:#070914;
-        color:white;
-      "
-    >
+    clickedButton.classList.add(
+      "correct"
+    );
 
-    <div style="
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      justify-content:center;
-    ">
+    const result =
+      document.getElementById(
+        "quizResult"
+      );
+
+    if (result) {
+      result.textContent =
+        "إجابة صحيحة! +10 نقاط";
+      result.style.color =
+        "var(--good)";
+    }
+
+  } else {
+
+    clickedButton.classList.add(
+      "wrong"
+    );
+
+    buttons[
+      question.correct
+    ]?.classList.add(
+      "correct"
+    );
+
+    const result =
+      document.getElementById(
+        "quizResult"
+      );
+
+    if (result) {
+      result.textContent =
+        "إجابة غير صحيحة.";
+      result.style.color =
+        "var(--bad)";
+    }
+
+  }
+
+
+  setTimeout(() => {
+
+    currentQuestion++;
+
+    renderQuiz();
+
+  }, 900);
+
+}
+
+
+function finishQuiz() {
+
+  addScore(
+    currentGame.id,
+    currentScore
+  );
+
+  gameContent.innerHTML = `
+
+    <div class="content-box">
+
+      <div style="font-size:60px">
+        🏆
+      </div>
+
+      <h2>
+        انتهت اللعبة
+      </h2>
+
+      <p>
+        حصلت على
+        <strong>
+          ${currentScore}
+        </strong>
+        نقطة.
+      </p>
 
       <button
-        id="signInBtn"
-        class="game-action"
-        type="button"
-      >
-        SIGN IN
-      </button>
-
-      <button
-        id="signUpBtn"
-        class="game-action"
-        type="button"
-      >
-        CREATE ACCOUNT
+        class="btn"
+        id="restartGame">
+        العب مرة أخرى
       </button>
 
     </div>
 
-    <p
-      id="loginMessage"
-      style="
-        margin-top:20px;
-        text-align:center;
-      "
-    ></p>
   `;
 
-  const emailInput =
-    document.getElementById(
-      "emailInput"
-    );
 
-  const passwordInput =
-    document.getElementById(
-      "passwordInput"
-    );
+  document
+    .getElementById("restartGame")
+    ?.addEventListener(
+      "click",
+      () => {
 
-  const signInBtn =
-    document.getElementById(
-      "signInBtn"
-    );
+        currentQuestion = 0;
+        currentScore = 0;
 
-  const signUpBtn =
-    document.getElementById(
-      "signUpBtn"
-    );
+        renderQuiz();
 
-  const message =
-    document.getElementById(
-      "loginMessage"
-    );
-
-  signInBtn.addEventListener(
-    "click",
-    async () => {
-      const email =
-        emailInput.value.trim();
-
-      const password =
-        passwordInput.value;
-
-      if (!email || !password) {
-        message.textContent =
-          "Enter email and password.";
-
-        return;
       }
+    );
 
-      message.textContent =
-        "Signing in...";
+}
 
-      const {
-        error
-      } =
-        await supabaseClient.auth
-          .signInWithPassword({
-            email,
-            password
-          });
 
-      if (error) {
-        message.textContent =
-          error.message;
+/* =========================
+   RIDDLE GAME
+========================= */
 
-        return;
-      }
+function renderRiddle() {
 
-      message.textContent =
-        "Signed in successfully.";
+  gameContent.innerHTML = `
 
-      await updateLoginButton();
+    <div class="riddle-box">
 
-      addTimeout(
-        closeGame,
-        800
+      <div style="font-size:55px">
+        ${currentGame.icon}
+      </div>
+
+      <div class="question">
+        ${escapeHTML(
+          currentGame.question
+        )}
+      </div>
+
+      <input
+        id="riddleAnswer"
+        class="text-input"
+        type="text"
+        placeholder="اكتب إجابتك هنا"
+        autocomplete="off">
+
+      <br><br>
+
+      <button
+        class="btn"
+        id="checkRiddle">
+        تحقق من الإجابة
+      </button>
+
+      <div
+        class="result"
+        id="riddleResult">
+      </div>
+
+    </div>
+
+  `;
+
+
+  const input =
+    document.getElementById(
+      "riddleAnswer"
+    );
+
+  const button =
+    document.getElementById(
+      "checkRiddle"
+    );
+
+  const result =
+    document.getElementById(
+      "riddleResult"
+    );
+
+
+  function checkAnswer() {
+
+    const userAnswer =
+      normalizeArabic(
+        input.value
       );
+
+    if (!userAnswer) {
+
+      result.textContent =
+        "اكتب إجابة أولًا.";
+
+      return;
+
+    }
+
+
+    const accepted =
+      currentGame.accepted || [
+        currentGame.answer
+      ];
+
+
+    const correct =
+      accepted.some(
+        answer =>
+          normalizeArabic(answer)
+            === userAnswer
+      );
+
+
+    if (correct) {
+
+      addScore(
+        currentGame.id,
+        15
+      );
+
+      result.innerHTML =
+        "إجابة صحيحة! +15 نقطة";
+
+      result.style.color =
+        "var(--good)";
+
+      button.disabled = true;
+
+    } else {
+
+      result.innerHTML =
+        `إجابة غير صحيحة. حاول مرة أخرى.`;
+
+      result.style.color =
+        "var(--bad)";
+
+    }
+
+  }
+
+
+  button?.addEventListener(
+    "click",
+    checkAnswer
+  );
+
+
+  input?.addEventListener(
+    "keydown",
+    event => {
+
+      if (event.key === "Enter") {
+        checkAnswer();
+      }
+
     }
   );
 
-  signUpBtn.addEventListener(
+}
+
+
+/* =========================
+   STORY GAME
+========================= */
+
+function renderStory() {
+
+  const story =
+    currentGame.story || [];
+
+  let page = 0;
+
+
+  function drawStory() {
+
+    const isLast =
+      page >= story.length - 1;
+
+
+    gameContent.innerHTML = `
+
+      <div class="story">
+
+        <div
+          style="
+            font-size:50px;
+            margin-bottom:10px;
+          ">
+          ${currentGame.icon}
+        </div>
+
+        <div>
+          ${escapeHTML(story[page])}
+        </div>
+
+        <div
+          style="
+            margin-top:20px;
+            color:var(--muted);
+          ">
+          صفحة ${page + 1}
+          من ${story.length}
+        </div>
+
+        <div>
+
+          ${
+            page > 0
+            ? `
+              <button
+                class="btn secondary"
+                id="storyBack">
+                السابق
+              </button>
+            `
+            : ""
+          }
+
+          ${
+            !isLast
+            ? `
+              <button
+                class="btn"
+                id="storyNext">
+                التالي
+              </button>
+            `
+            : `
+              <button
+                class="btn"
+                id="storyFinish">
+                إنهاء القصة
+              </button>
+            `
+          }
+
+        </div>
+
+      </div>
+
+    `;
+
+
+    document
+      .getElementById("storyBack")
+      ?.addEventListener(
+        "click",
+        () => {
+
+          page--;
+
+          drawStory();
+
+        }
+      );
+
+
+    document
+      .getElementById("storyNext")
+      ?.addEventListener(
+        "click",
+        () => {
+
+          page++;
+
+          drawStory();
+
+        }
+      );
+
+
+    document
+      .getElementById("storyFinish")
+      ?.addEventListener(
+        "click",
+        finishStory
+      );
+
+  }
+
+
+  function finishStory() {
+
+    addScore(
+      currentGame.id,
+      20
+    );
+
+    gameContent.innerHTML = `
+
+      <div class="content-box">
+
+        <div style="font-size:60px">
+          🌙
+        </div>
+
+        <h2>
+          انتهت الحكاية
+        </h2>
+
+        <p>
+          حصلت على
+          <strong>20 نقطة</strong>
+          لإكمال القصة.
+        </p>
+
+        <button
+          class="btn"
+          id="storyAgain">
+          قراءة القصة مرة أخرى
+        </button>
+
+      </div>
+
+    `;
+
+
+    document
+      .getElementById("storyAgain")
+      ?.addEventListener(
+        "click",
+        () => {
+
+          page = 0;
+
+          drawStory();
+
+        }
+      );
+
+  }
+
+
+  drawStory();
+
+}
+
+
+/* =========================
+   TAP GAME
+========================= */
+
+function renderTapGame() {
+
+  tapCount = 0;
+
+  tapTimeLeft =
+    currentGame.duration || 10;
+
+
+  gameContent.innerHTML = `
+
+    <div>
+
+      <div
+        class="scorebox">
+        الوقت:
+        <span id="tapTimer">
+          ${tapTimeLeft}
+        </span>
+      </div>
+
+      <div
+        class="scorebox">
+        الضغطات:
+        <span id="tapScore">
+          0
+        </span>
+      </div>
+
+      <div class="timer">
+        ${currentGame.icon}
+      </div>
+
+      <button
+        id="tapButton"
+        class="big-action">
+        اضغط!
+      </button>
+
+      <div
+        class="result"
+        id="tapResult">
+        اضغط للبدء
+      </div>
+
+    </div>
+
+  `;
+
+
+  const tapButton =
+    document.getElementById(
+      "tapButton"
+    );
+
+  const timerElement =
+    document.getElementById(
+      "tapTimer"
+    );
+
+  const scoreElement =
+    document.getElementById(
+      "tapScore"
+    );
+
+  const resultElement =
+    document.getElementById(
+      "tapResult"
+    );
+
+
+  let started = false;
+
+
+  function finishTapGame() {
+
+    clearInterval(tapTimer);
+
+    tapButton.disabled = true;
+
+    const points =
+      Math.min(
+        tapCount,
+        100
+      );
+
+
+    addScore(
+      currentGame.id,
+      points
+    );
+
+
+    resultElement.innerHTML =
+      `انتهى الوقت! حصلت على
+       <strong>${points}</strong>
+       نقطة.`;
+
+  }
+
+
+  tapButton.addEventListener(
     "click",
-    async () => {
-      const email =
-        emailInput.value.trim();
+    () => {
 
-      const password =
-        passwordInput.value;
+      if (!started) {
 
-      if (!email || !password) {
-        message.textContent =
-          "Enter email and password.";
+        started = true;
 
-        return;
+        resultElement.textContent =
+          "استمر بالضغط!";
+
+        tapTimer =
+          setInterval(() => {
+
+            tapTimeLeft--;
+
+            timerElement.textContent =
+              tapTimeLeft;
+
+            if (tapTimeLeft <= 0) {
+
+              finishTapGame();
+
+            }
+
+          }, 1000);
+
       }
 
-      if (password.length < 6) {
-        message.textContent =
-          "Password must be at least 6 characters.";
 
-        return;
+      if (tapTimeLeft > 0) {
+
+        tapCount++;
+
+        scoreElement.textContent =
+          tapCount;
+
       }
 
-      message.textContent =
-        "Creating account...";
+    }
+  );
+
+}
+
+
+/* =========================
+   FILTERS
+========================= */
+
+filters
+  ?.querySelectorAll(
+    "[data-category]"
+  )
+  .forEach(button => {
+
+    button.addEventListener(
+      "click",
+      () => {
+
+        selectedCategory =
+          button.dataset.category;
+
+        filters
+          .querySelectorAll("button")
+          .forEach(
+            item =>
+              item.classList.add(
+                "secondary"
+              )
+          );
+
+        button.classList.remove(
+          "secondary"
+        );
+
+        renderGames();
+
+      }
+    );
+
+  });
+
+
+/* =========================
+   SEARCH
+========================= */
+
+searchInput?.addEventListener(
+  "input",
+  renderGames
+);
+
+
+/* =========================
+   AUTH MODAL
+========================= */
+
+function showAuthModal(
+  mode = "login"
+) {
+
+  authMode = mode;
+
+  if (!authModal) return;
+
+  authModal.classList.add("show");
+
+  authModal.setAttribute(
+    "aria-hidden",
+    "false"
+  );
+
+  updateAuthMode();
+
+  setTimeout(
+    () => emailInput?.focus(),
+    100
+  );
+
+}
+
+
+function hideAuthModal() {
+
+  authModal?.classList.remove(
+    "show"
+  );
+
+  authModal?.setAttribute(
+    "aria-hidden",
+    "true"
+  );
+
+  clearAuthMessage();
+
+}
+
+
+openAuth?.addEventListener(
+  "click",
+  () => showAuthModal("login")
+);
+
+
+openAuthHero?.addEventListener(
+  "click",
+  () => showAuthModal("signup")
+);
+
+
+closeAuth?.addEventListener(
+  "click",
+  hideAuthModal
+);
+
+
+authModal?.addEventListener(
+  "click",
+  event => {
+
+    if (event.target === authModal) {
+      hideAuthModal();
+    }
+
+  }
+);
+
+
+document.addEventListener(
+  "keydown",
+  event => {
+
+    if (
+      event.key === "Escape" &&
+      authModal?.classList.contains("show")
+    ) {
+
+      hideAuthModal();
+
+    }
+
+  }
+);
+
+
+/* =========================
+   AUTH MODE
+========================= */
+
+function updateAuthMode() {
+
+  if (authMode === "login") {
+
+    authTitle.textContent =
+      "تسجيل الدخول";
+
+    submitAuth.textContent =
+      "تسجيل الدخول";
+
+    loginMode.classList.remove(
+      "secondary"
+    );
+
+    signupMode.classList.add(
+      "secondary"
+    );
+
+  } else {
+
+    authTitle.textContent =
+      "إنشاء حساب";
+
+    submitAuth.textContent =
+      "إنشاء حساب";
+
+    signupMode.classList.remove(
+      "secondary"
+    );
+
+    loginMode.classList.add(
+      "secondary"
+    );
+
+  }
+
+}
+
+
+loginMode?.addEventListener(
+  "click",
+  () => {
+
+    authMode = "login";
+
+    clearAuthMessage();
+
+    updateAuthMode();
+
+  }
+);
+
+
+signupMode?.addEventListener(
+  "click",
+  () => {
+
+    authMode = "signup";
+
+    clearAuthMessage();
+
+    updateAuthMode();
+
+  }
+);
+
+
+/* =========================
+   AUTH MESSAGE
+========================= */
+
+function showAuthMessage(
+  message,
+  type = "normal"
+) {
+
+  if (!authMessage) return;
+
+  authMessage.textContent =
+    message;
+
+  if (type === "error") {
+    authMessage.style.color =
+      "var(--bad)";
+  }
+
+  else if (type === "success") {
+    authMessage.style.color =
+      "var(--good)";
+  }
+
+  else {
+    authMessage.style.color =
+      "#ffd36b";
+  }
+
+}
+
+
+function clearAuthMessage() {
+
+  if (!authMessage) return;
+
+  authMessage.textContent = "";
+
+}
+
+
+/* =========================
+   LOGIN / SIGNUP
+========================= */
+
+submitAuth?.addEventListener(
+  "click",
+  handleAuth
+);
+
+
+passwordInput?.addEventListener(
+  "keydown",
+  event => {
+
+    if (event.key === "Enter") {
+      handleAuth();
+    }
+
+  }
+);
+
+
+emailInput?.addEventListener(
+  "keydown",
+  event => {
+
+    if (event.key === "Enter") {
+      passwordInput?.focus();
+    }
+
+  }
+);
+
+
+async function handleAuth() {
+
+  clearAuthMessage();
+
+  const email =
+    emailInput.value.trim();
+
+  const password =
+    passwordInput.value;
+
+
+  if (!email) {
+
+    showAuthMessage(
+      "اكتب البريد الإلكتروني.",
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  if (!password || password.length < 6) {
+
+    showAuthMessage(
+      "كلمة المرور يجب أن تكون 6 أحرف على الأقل.",
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  if (!supabaseClient) {
+
+    showAuthMessage(
+      "تعذر الاتصال بخدمة الحسابات.",
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  submitAuth.disabled = true;
+
+  submitAuth.textContent =
+    "جارٍ التنفيذ...";
+
+
+  try {
+
+    if (authMode === "signup") {
 
       const {
         data,
         error
       } =
-        await supabaseClient.auth
-          .signUp({
-            email,
-            password
-          });
+        await supabaseClient.auth.signUp({
+          email,
+          password
+        });
+
 
       if (error) {
-        message.textContent =
-          error.message;
-
-        return;
+        throw error;
       }
 
-      if (
-        data &&
-        data.session
-      ) {
-        message.textContent =
-          "Account created successfully.";
 
-        await updateLoginButton();
+      if (data?.session) {
 
-        addTimeout(
-          closeGame,
-          800
+        showAuthMessage(
+          "تم إنشاء الحساب وتسجيل الدخول.",
+          "success"
         );
+
+        await refreshAuth();
+
+        setTimeout(
+          hideAuthModal,
+          700
+        );
+
       } else {
-        message.textContent =
-          "Account created. Check your email if confirmation is required.";
+
+        showAuthMessage(
+          "تم إنشاء الحساب. تحقق من بريدك الإلكتروني إذا طلب منك ذلك.",
+          "success"
+        );
+
       }
+
+    } else {
+
+      const {
+        error
+      } =
+        await supabaseClient.auth.signInWithPassword({
+          email,
+          password
+        });
+
+
+      if (error) {
+        throw error;
+      }
+
+
+      showAuthMessage(
+        "تم تسجيل الدخول بنجاح.",
+        "success"
+      );
+
+
+      await refreshAuth();
+
+
+      setTimeout(
+        hideAuthModal,
+        700
+      );
+
     }
-  );
-}
 
-/* =========================================================
-   ACCOUNT MENU
-   ========================================================= */
+  } catch (error) {
 
-async function accountMenu() {
-  if (!supabaseClient) {
-    openLogin();
-    return;
+    console.error(error);
+
+    showAuthMessage(
+      translateAuthError(
+        error?.message
+      ),
+      "error"
+    );
+
+  } finally {
+
+    submitAuth.disabled = false;
+
+    updateAuthMode();
+
   }
 
-  const {
-    data,
-    error
-  } =
-    await supabaseClient.auth.getUser();
+}
+
+
+/* =========================
+   AUTH ERROR TRANSLATION
+========================= */
+
+function translateAuthError(
+  message
+) {
+
+  const text =
+    String(message || "")
+      .toLowerCase();
+
 
   if (
-    error ||
-    !data ||
-    !data.user
+    text.includes("invalid login") ||
+    text.includes("invalid credentials")
   ) {
-    openLogin();
-    return;
+
+    return "البريد الإلكتروني أو كلمة المرور غير صحيحة.";
+
   }
 
-  clearGameTimers();
 
-  gameModal.classList.remove(
-    "hidden"
-  );
+  if (
+    text.includes("user already registered")
+  ) {
 
-  gameArea.innerHTML = `
-    <h2>ODDORA Account</h2>
+    return "هذا البريد مسجل مسبقًا. جرّب تسجيل الدخول.";
 
-    <p style="
-      word-break:break-word;
-      margin:20px 0;
-    ">
-      ${escapeHtml(data.user.email)}
-    </p>
+  }
 
-    <button
-      id="logoutBtn"
-      class="game-action"
-      type="button"
-    >
-      SIGN OUT
-    </button>
-  `;
 
-  document
-    .getElementById("logoutBtn")
-    .addEventListener(
-      "click",
-      async () => {
-        const {
-          error
-        } =
-          await supabaseClient.auth
-            .signOut();
+  if (
+    text.includes("password")
+  ) {
 
-        if (error) {
-          alert(error.message);
-          return;
-        }
+    return "تحقق من كلمة المرور. يجب أن تكون 6 أحرف على الأقل.";
 
-        await updateLoginButton();
+  }
 
-        closeGame();
-      }
-    );
+
+  if (
+    text.includes("email")
+  ) {
+
+    return "تحقق من البريد الإلكتروني.";
+
+  }
+
+
+  return message ||
+    "حدث خطأ. حاول مرة أخرى.";
+
 }
 
-/* =========================================================
-   SAVE SCORE
-   ========================================================= */
 
-async function saveScore(
-  finalScore,
-  game
-) {
-  if (!game) return;
+/* =========================
+   AUTH UI
+========================= */
 
-  const gameId =
-    game.id;
+function renderLoggedOut() {
 
-  const localKey =
-    `oddora_${gameId}_scores`;
+  authArea.innerHTML = `
 
-  let localScores = [];
+    <button
+      class="btn"
+      id="openAuthDynamic">
+      دخول / تسجيل
+    </button>
 
-  try {
-    localScores =
-      JSON.parse(
-        localStorage.getItem(
-          localKey
-        )
-      ) || [];
-  } catch {
-    localScores = [];
-  }
+  `;
 
-  localScores.push({
-    score: finalScore,
-    date:
-      new Date().toISOString()
-  });
 
-  localScores.sort(
-    (a, b) =>
-      Number(b.score) -
-      Number(a.score)
+  document
+    .getElementById(
+      "openAuthDynamic"
+    )
+    ?.addEventListener(
+      "click",
+      () => showAuthModal("login")
+    );
+
+}
+
+
+function renderLoggedIn(user) {
+
+  const email =
+    user?.email || "المستخدم";
+
+  const firstLetter =
+    email
+      .charAt(0)
+      .toUpperCase();
+
+
+  const scores =
+    getLocalScores();
+
+
+  authArea.innerHTML = `
+
+    <div class="profile">
+
+      <div class="avatar">
+        ${escapeHTML(firstLetter)}
+      </div>
+
+      <button
+        class="btn secondary"
+        id="logoutButton">
+        خروج
+      </button>
+
+    </div>
+
+  `;
+
+
+  const logoutButton =
+    document.getElementById(
+      "logoutButton"
+    );
+
+
+  logoutButton?.addEventListener(
+    "click",
+    logout
   );
 
-  localScores =
-    localScores.slice(0, 20);
 
-  try {
-    localStorage.setItem(
-      localKey,
-      JSON.stringify(
-        localScores
-      )
-    );
-  } catch (error) {
-    console.log(
-      "Local score save error:",
-      error
-    );
-  }
+  console.log(
+    "ODDORA user:",
+    email,
+    "Local score:",
+    scores.total
+  );
+
+}
+
+
+async function refreshAuth() {
 
   if (!supabaseClient) {
-    loadLeaderboard();
+
+    renderLoggedOut();
+
     return;
+
   }
 
+
   try {
+
     const {
       data,
       error
     } =
-      await supabaseClient.auth
-        .getUser();
+      await supabaseClient.auth.getSession();
 
-    if (
-      !error &&
-      data &&
-      data.user
-    ) {
-      const result =
-        await supabaseClient
-          .from("scores")
-          .insert({
-            user_id:
-              data.user.id,
-            game_id:
-              gameId,
-            score:
-              finalScore
-          });
 
-      if (result.error) {
-        console.log(
-          "Online score error:",
-          result.error.message
-        );
-      }
+    if (error) {
+      throw error;
     }
+
+
+    currentUser =
+      data?.session?.user || null;
+
+
+    if (currentUser) {
+      renderLoggedIn(
+        currentUser
+      );
+    } else {
+      renderLoggedOut();
+    }
+
   } catch (error) {
-    console.log(
-      "Online score unavailable:",
+
+    console.error(
+      "Auth refresh error:",
       error
     );
+
+    currentUser = null;
+
+    renderLoggedOut();
+
   }
 
-  loadLeaderboard();
 }
 
-/* =========================================================
-   LOCAL LEADERBOARD
-   ========================================================= */
 
-function getLocalLeaderboard() {
-  const allScores = [];
+async function logout() {
 
-  games.forEach(game => {
-    const key =
-      `oddora_${game.id}_scores`;
+  try {
 
-    let scores = [];
-
-    try {
-      scores =
-        JSON.parse(
-          localStorage.getItem(
-            key
-          )
-        ) || [];
-    } catch {
-      scores = [];
+    if (supabaseClient) {
+      await supabaseClient.auth.signOut();
     }
 
-    scores.forEach(item => {
-      allScores.push({
-        game:
-          game.name,
+  } catch (error) {
 
-        icon:
-          game.icon,
+    console.error(error);
 
-        score:
-          Number(item.score) || 0,
-
-        date:
-          item.date
-      });
-    });
-  });
-
-  allScores.sort(
-    (a, b) =>
-      b.score - a.score
-  );
-
-  return allScores.slice(
-    0,
-    10
-  );
-}
-
-/* =========================================================
-   LEADERBOARD
-   ========================================================= */
-
-async function loadLeaderboard() {
-  if (!leaderboardBox) return;
-
-  leaderboardBox.innerHTML = `
-    <div style="
-      padding:20px;
-      text-align:center;
-      color:#9da4bd;
-    ">
-      Loading scores...
-    </div>
-  `;
-
-  let scores = [];
-
-  if (supabaseClient) {
-    try {
-      const result =
-        await supabaseClient
-          .from("scores")
-          .select(
-            "game_id, score, created_at"
-          )
-          .order(
-            "score",
-            {
-              ascending:false
-            }
-          )
-          .limit(10);
-
-      if (
-        !result.error &&
-        Array.isArray(
-          result.data
-        )
-      ) {
-        scores =
-          result.data.map(
-            item => {
-              const game =
-                games.find(
-                  g =>
-                    g.id ===
-                    item.game_id
-                );
-
-              return {
-                game:
-                  game?.name ||
-                  item.game_id,
-
-                icon:
-                  game?.icon ||
-                  "🎮",
-
-                score:
-                  Number(
-                    item.score
-                  ) || 0,
-
-                date:
-                  item.created_at
-              };
-            }
-          );
-      }
-    } catch (error) {
-      console.log(
-        "Leaderboard error:",
-        error
-      );
-    }
   }
 
-  if (!scores.length) {
-    scores =
-      getLocalLeaderboard();
-  }
 
-  if (!scores.length) {
-    leaderboardBox.innerHTML = `
-      <div style="
-        text-align:center;
-        padding:30px;
-        color:#9da4bd;
-      ">
-        No scores yet.
-        <br>
-        Play a game to create the first score.
-      </div>
-    `;
+  currentUser = null;
 
-    return;
-  }
+  renderLoggedOut();
 
-  leaderboardBox.innerHTML =
-    scores
-      .map(
-        (item,index) => `
-          <div style="
-            display:flex;
-            align-items:center;
-            gap:12px;
-            padding:14px;
-            border-bottom:1px solid rgba(255,255,255,.08);
-          ">
-
-            <strong style="
-              width:28px;
-            ">
-              ${index + 1}
-            </strong>
-
-            <span style="
-              font-size:23px;
-            ">
-              ${item.icon}
-            </span>
-
-            <span style="
-              flex:1;
-              color:#dce1f4;
-            ">
-              ${escapeHtml(
-                item.game
-              )}
-            </span>
-
-            <strong>
-              ${item.score}
-            </strong>
-
-          </div>
-        `
-      )
-      .join("");
 }
 
-/* =========================================================
-   EVENTS
-   ========================================================= */
 
-if (closeModal) {
-  closeModal.addEventListener(
-    "click",
-    closeGame
-  );
-}
-
-if (gameModal) {
-  gameModal.addEventListener(
-    "click",
-    event => {
-      if (
-        event.target ===
-        gameModal
-      ) {
-        closeGame();
-      }
-    }
-  );
-}
-
-document.addEventListener(
-  "keydown",
-  event => {
-    if (
-      event.key === "Escape"
-    ) {
-      closeGame();
-    }
-  }
-);
-
-if (search) {
-  search.addEventListener(
-    "input",
-    event => {
-      const value =
-        event.target.value
-          .toLowerCase()
-          .trim();
-
-      const filtered =
-        games.filter(game =>
-          game.name
-            .toLowerCase()
-            .includes(value) ||
-          game.description
-            .toLowerCase()
-            .includes(value)
-        );
-
-      renderGames(
-        filtered
-      );
-    }
-  );
-}
-
-if (loginBtn) {
-  loginBtn.addEventListener(
-    "click",
-    async () => {
-      if (!supabaseClient) {
-        openLogin();
-        return;
-      }
-
-      const {
-        data
-      } =
-        await supabaseClient.auth
-          .getUser();
-
-      if (
-        data &&
-        data.user
-      ) {
-        accountMenu();
-      } else {
-        openLogin();
-      }
-    }
-  );
-}
-
-/* =========================================================
+/* =========================
    SUPABASE AUTH LISTENER
-   ========================================================= */
+========================= */
 
 if (supabaseClient) {
+
   supabaseClient.auth.onAuthStateChange(
-    () => {
-      updateLoginButton();
+    (event, session) => {
+
+      currentUser =
+        session?.user || null;
+
+
+      if (currentUser) {
+        renderLoggedIn(
+          currentUser
+        );
+      } else {
+        renderLoggedOut();
+      }
+
     }
   );
+
 }
 
-/* =========================================================
-   START
-   ========================================================= */
 
-renderGames();
+/* =========================
+   INITIALIZATION
+========================= */
 
-updateLoginButton();
+function initializeApp() {
 
-loadLeaderboard();
+  renderGames();
 
-console.log(
-  "ODDORA Games loaded successfully."
-);
+  updateAuthMode();
+
+  refreshAuth();
+
+}
+
+
+initializeApp();
