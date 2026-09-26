@@ -1,9 +1,12 @@
 /* =========================================================
-   ODDORA GAMES - APP.JS
+   ODDORA GAMES — FINAL APP.JS
    ========================================================= */
 
-const SUPABASE_URL = "https://xywhwqbfzfvwjdthchjz.supabase.co";
-const SUPABASE_KEY = "sb_publishable_31E-JTjhC4YxVIxrYHwfKA_4v4RbeZs";
+const SUPABASE_URL =
+  "https://xywhwqbfzfvwjdthchjz.supabase.co";
+
+const SUPABASE_KEY =
+  "sb_publishable_31E-JTjhC4YxVIxrYHwfKA_4v4RbeZs";
 
 let supabaseClient = null;
 
@@ -17,7 +20,7 @@ if (
       SUPABASE_KEY
     );
   } catch (error) {
-    console.error("Supabase error:", error);
+    console.error("Supabase initialization error:", error);
   }
 }
 
@@ -25,13 +28,26 @@ if (
    ELEMENTS
    ========================================================= */
 
-const gameGrid = document.getElementById("gameGrid");
-const gameModal = document.getElementById("gameModal");
-const gameArea = document.getElementById("gameArea");
-const closeModal = document.getElementById("closeModal");
-const loginBtn = document.getElementById("loginBtn");
-const search = document.getElementById("search");
-const leaderboardBox = document.getElementById("leaderboardBox");
+const gameGrid =
+  document.getElementById("gameGrid");
+
+const gameModal =
+  document.getElementById("gameModal");
+
+const gameArea =
+  document.getElementById("gameArea");
+
+const closeModal =
+  document.getElementById("closeModal");
+
+const loginBtn =
+  document.getElementById("loginBtn");
+
+const search =
+  document.getElementById("search");
+
+const leaderboardBox =
+  document.getElementById("leaderboardBox");
 
 let currentGame = null;
 let timer = null;
@@ -49,13 +65,15 @@ const games = [
     description: "Test your reaction speed.",
     play: startReactionGame
   },
+
   {
     id: "click",
     name: "Click Storm",
     icon: "👆",
-    description: "Click as fast as possible in 10 seconds.",
+    description: "Click as fast as possible.",
     play: startClickGame
   },
+
   {
     id: "math",
     name: "Quick Math",
@@ -63,6 +81,7 @@ const games = [
     description: "Solve mathematical challenges.",
     play: startMathGame
   },
+
   {
     id: "memory",
     name: "Memory Match",
@@ -70,6 +89,7 @@ const games = [
     description: "Find all matching pairs.",
     play: startMemoryGame
   },
+
   {
     id: "target",
     name: "Target Tap",
@@ -77,6 +97,7 @@ const games = [
     description: "Hit the moving target.",
     play: startTargetGame
   },
+
   {
     id: "color",
     name: "Color Switch",
@@ -87,14 +108,19 @@ const games = [
 ];
 
 /* =========================================================
-   GENERAL FUNCTIONS
+   HELPERS
    ========================================================= */
 
 function clearGameTimers() {
-  clearInterval(timer);
-  timer = null;
+  if (timer) {
+    clearInterval(timer);
+    timer = null;
+  }
 
-  activeTimeouts.forEach(id => clearTimeout(id));
+  activeTimeouts.forEach(id => {
+    clearTimeout(id);
+  });
+
   activeTimeouts = [];
 }
 
@@ -104,45 +130,78 @@ function addTimeout(callback, delay) {
   return id;
 }
 
+function escapeHtml(value) {
+  const div = document.createElement("div");
+  div.textContent = String(value ?? "");
+  return div.innerHTML;
+}
+
+/* =========================================================
+   RENDER GAMES
+   ========================================================= */
+
 function renderGames(list = games) {
   if (!gameGrid) return;
 
   gameGrid.innerHTML = "";
 
-  if (list.length === 0) {
+  if (!list.length) {
     gameGrid.innerHTML = `
       <div style="
         grid-column:1/-1;
         text-align:center;
-        padding:40px;
-        opacity:.7;
+        padding:50px 20px;
+        color:#9da4bd;
       ">
         No games found.
       </div>
     `;
+
     return;
   }
 
   list.forEach(game => {
-    const card = document.createElement("div");
+    const card =
+      document.createElement("article");
+
     card.className = "game-card";
 
     card.innerHTML = `
-      <div class="game-icon">${game.icon}</div>
-      <h3>${game.name}</h3>
-      <p>${game.description}</p>
-      <button class="play-button">PLAY NOW</button>
+      <div class="game-icon">
+        ${game.icon}
+      </div>
+
+      <h3>
+        ${escapeHtml(game.name)}
+      </h3>
+
+      <p>
+        ${escapeHtml(game.description)}
+      </p>
+
+      <button
+        class="play-button"
+        type="button"
+      >
+        PLAY NOW
+      </button>
     `;
 
-    const button = card.querySelector(".play-button");
+    const playButton =
+      card.querySelector(".play-button");
 
-    button.addEventListener("click", () => {
-      openGame(game);
-    });
+    playButton.addEventListener(
+      "click",
+      () => openGame(game)
+    );
 
     gameGrid.appendChild(card);
   });
 }
+
+/* =========================================================
+   OPEN / CLOSE GAME
+   ========================================================= */
 
 function openGame(game) {
   clearGameTimers();
@@ -152,6 +211,7 @@ function openGame(game) {
   if (!gameModal || !gameArea) return;
 
   gameModal.classList.remove("hidden");
+
   gameArea.innerHTML = "";
 
   try {
@@ -161,11 +221,22 @@ function openGame(game) {
 
     gameArea.innerHTML = `
       <h2>Game Error</h2>
-      <p>Please try again.</p>
-      <button class="game-action" onclick="closeGame()">
-        CLOSE
-      </button>
+
+      <p>
+        Something went wrong.
+        Please try again.
+      </p>
     `;
+
+    addButton(
+      "TRY AGAIN",
+      () => game.play()
+    );
+
+    addButton(
+      "CLOSE",
+      closeGame
+    );
   }
 }
 
@@ -184,22 +255,41 @@ function closeGame() {
 }
 
 function addButton(text, callback) {
-  const button = document.createElement("button");
+  const button =
+    document.createElement("button");
 
   button.className = "game-action";
+
+  button.type = "button";
+
   button.textContent = text;
 
-  button.addEventListener("click", callback);
+  button.addEventListener(
+    "click",
+    callback
+  );
 
   gameArea.appendChild(button);
 
   return button;
 }
 
+/* =========================================================
+   SCORE SCREEN
+   ========================================================= */
+
 function showScore(finalScore) {
+  const gameAtFinish = currentGame;
+
   clearGameTimers();
 
-  const safeScore = Math.max(0, Math.floor(Number(finalScore) || 0));
+  const safeScore =
+    Math.max(
+      0,
+      Math.floor(
+        Number(finalScore) || 0
+      )
+    );
 
   gameArea.innerHTML = `
     <h2>Game Over</h2>
@@ -208,18 +298,30 @@ function showScore(finalScore) {
       ${safeScore}
     </div>
 
-    <p>Your score</p>
+    <p style="text-align:center;">
+      Your score
+    </p>
   `;
 
-  addButton("PLAY AGAIN", () => {
-    if (currentGame) {
-      currentGame.play();
+  addButton(
+    "PLAY AGAIN",
+    () => {
+      if (gameAtFinish) {
+        currentGame = gameAtFinish;
+        gameAtFinish.play();
+      }
     }
-  });
+  );
 
-  addButton("CLOSE", closeGame);
+  addButton(
+    "CLOSE",
+    closeGame
+  );
 
-  saveScore(safeScore);
+  saveScore(
+    safeScore,
+    gameAtFinish
+  );
 }
 
 /* =========================================================
@@ -233,8 +335,8 @@ function startReactionGame() {
     <h2>Reaction Rush</h2>
 
     <p>
-      Wait until the button turns green.
-      Then tap as quickly as possible.
+      Wait until the button turns green,
+      then tap as quickly as possible.
     </p>
 
     <div
@@ -242,7 +344,8 @@ function startReactionGame() {
       style="
         margin:25px 0;
         font-size:20px;
-        font-weight:700;
+        font-weight:800;
+        text-align:center;
       "
     >
       Get ready...
@@ -251,6 +354,7 @@ function startReactionGame() {
     <button
       id="reactionButton"
       class="game-action"
+      type="button"
       style="
         width:100%;
         height:120px;
@@ -262,51 +366,80 @@ function startReactionGame() {
     </button>
   `;
 
-  const button = document.getElementById("reactionButton");
-  const status = document.getElementById("reactionStatus");
+  const button =
+    document.getElementById(
+      "reactionButton"
+    );
+
+  const status =
+    document.getElementById(
+      "reactionStatus"
+    );
 
   let active = false;
   let finished = false;
   let startTime = 0;
 
-  const delay = 1500 + Math.random() * 3000;
+  const delay =
+    1500 + Math.random() * 3000;
 
   addTimeout(() => {
     if (finished) return;
 
     active = true;
+
     startTime = performance.now();
 
-    button.style.background = "#16c784";
-    button.textContent = "TAP!";
-    status.textContent = "GO!";
+    button.style.background =
+      "#16c784";
+
+    button.textContent =
+      "TAP!";
+
+    status.textContent =
+      "GO!";
   }, delay);
 
-  button.addEventListener("click", () => {
-    if (finished) return;
+  button.addEventListener(
+    "click",
+    () => {
+      if (finished) return;
 
-    if (!active) {
+      if (!active) {
+        finished = true;
+
+        gameArea.innerHTML = `
+          <h2>Too Early!</h2>
+
+          <p>
+            You tapped before the signal.
+          </p>
+        `;
+
+        addButton(
+          "TRY AGAIN",
+          startReactionGame
+        );
+
+        return;
+      }
+
       finished = true;
 
-      gameArea.innerHTML = `
-        <h2>Too Early!</h2>
-        <p>You tapped before the signal.</p>
-      `;
+      const reaction =
+        Math.round(
+          performance.now() - startTime
+        );
 
-      addButton("TRY AGAIN", startReactionGame);
-      return;
+      const score =
+        Math.max(
+          1,
+          1000 - reaction
+        );
+
+      showScore(score);
     }
-
-    finished = true;
-
-    const reaction =
-      Math.round(performance.now() - startTime);
-
-    const reactionScore =
-      Math.max(1, 1000 - reaction);
-
-    showScore(reactionScore);
-  });
+  );
 }
 
 /* =========================================================
@@ -323,10 +456,15 @@ function startClickGame() {
     <h2>Click Storm</h2>
 
     <p>
-      Click as many times as possible in 10 seconds.
+      Click as many times as possible
+      in 10 seconds.
     </p>
 
-    <div style="font-size:24px;margin:20px;">
+    <div style="
+      font-size:24px;
+      margin:20px;
+      text-align:center;
+    ">
       Time:
       <strong id="clickTime">10</strong>
     </div>
@@ -341,6 +479,7 @@ function startClickGame() {
     <button
       id="clickButton"
       class="game-action"
+      type="button"
       style="
         width:100%;
         height:120px;
@@ -351,22 +490,40 @@ function startClickGame() {
     </button>
   `;
 
-  const button = document.getElementById("clickButton");
-  const timeDisplay = document.getElementById("clickTime");
-  const scoreDisplay = document.getElementById("clickScore");
+  const button =
+    document.getElementById(
+      "clickButton"
+    );
 
-  button.addEventListener("click", () => {
-    clicks++;
-    scoreDisplay.textContent = clicks;
-  });
+  const timeDisplay =
+    document.getElementById(
+      "clickTime"
+    );
+
+  const scoreDisplay =
+    document.getElementById(
+      "clickScore"
+    );
+
+  button.addEventListener(
+    "click",
+    () => {
+      clicks++;
+
+      scoreDisplay.textContent =
+        clicks;
+    }
+  );
 
   timer = setInterval(() => {
     seconds--;
 
-    timeDisplay.textContent = seconds;
+    timeDisplay.textContent =
+      seconds;
 
     if (seconds <= 0) {
       clearInterval(timer);
+
       timer = null;
 
       showScore(clicks);
@@ -392,7 +549,11 @@ function startMathGame() {
       Solve as many questions as possible.
     </p>
 
-    <div style="font-size:22px;margin:15px;">
+    <div style="
+      font-size:22px;
+      margin:15px;
+      text-align:center;
+    ">
       Time:
       <strong id="mathTime">20</strong>
     </div>
@@ -412,9 +573,9 @@ function startMathGame() {
       type="number"
       inputmode="numeric"
       placeholder="Answer"
+      autocomplete="off"
       style="
         width:100%;
-        box-sizing:border-box;
         padding:15px;
         border-radius:10px;
         border:1px solid #293253;
@@ -428,31 +589,65 @@ function startMathGame() {
     <button
       id="mathSubmit"
       class="game-action"
+      type="button"
     >
       SUBMIT
     </button>
 
-    <div style="margin-top:20px;">
+    <div style="
+      margin-top:20px;
+      text-align:center;
+    ">
       Score:
       <strong id="mathScore">0</strong>
     </div>
   `;
 
-  const question = document.getElementById("mathQuestion");
-  const input = document.getElementById("mathInput");
-  const submit = document.getElementById("mathSubmit");
-  const scoreDisplay = document.getElementById("mathScore");
-  const timeDisplay = document.getElementById("mathTime");
+  const question =
+    document.getElementById(
+      "mathQuestion"
+    );
+
+  const input =
+    document.getElementById(
+      "mathInput"
+    );
+
+  const submit =
+    document.getElementById(
+      "mathSubmit"
+    );
+
+  const scoreDisplay =
+    document.getElementById(
+      "mathScore"
+    );
+
+  const timeDisplay =
+    document.getElementById(
+      "mathTime"
+    );
 
   function newQuestion() {
-    const a = Math.floor(Math.random() * 20) + 1;
-    const b = Math.floor(Math.random() * 20) + 1;
+    const a =
+      Math.floor(
+        Math.random() * 20
+      ) + 1;
 
-    const operations = ["+", "-", "*"];
+    const b =
+      Math.floor(
+        Math.random() * 20
+      ) + 1;
+
+    const operations =
+      ["+", "-", "*"];
 
     const operation =
       operations[
-        Math.floor(Math.random() * operations.length)
+        Math.floor(
+          Math.random() *
+          operations.length
+        )
       ];
 
     if (operation === "+") {
@@ -476,31 +671,44 @@ function startMathGame() {
   }
 
   function submitAnswer() {
-    if (Number(input.value) === answer) {
+    if (
+      Number(input.value) ===
+      answer
+    ) {
       points++;
-      scoreDisplay.textContent = points;
+
+      scoreDisplay.textContent =
+        points;
     }
 
     newQuestion();
   }
 
-  submit.addEventListener("click", submitAnswer);
+  submit.addEventListener(
+    "click",
+    submitAnswer
+  );
 
-  input.addEventListener("keydown", event => {
-    if (event.key === "Enter") {
-      submitAnswer();
+  input.addEventListener(
+    "keydown",
+    event => {
+      if (event.key === "Enter") {
+        submitAnswer();
+      }
     }
-  });
+  );
 
   newQuestion();
 
   timer = setInterval(() => {
     seconds--;
 
-    timeDisplay.textContent = seconds;
+    timeDisplay.textContent =
+      seconds;
 
     if (seconds <= 0) {
       clearInterval(timer);
+
       timer = null;
 
       showScore(points);
@@ -524,9 +732,12 @@ function startMemoryGame() {
     "🥝"
   ];
 
-  let cards = [...symbols, ...symbols];
+  let cards =
+    [...symbols, ...symbols];
 
-  cards.sort(() => Math.random() - 0.5);
+  cards.sort(
+    () => Math.random() - 0.5
+  );
 
   let first = null;
   let second = null;
@@ -552,76 +763,128 @@ function startMemoryGame() {
     ></div>
   `;
 
-  const grid = document.getElementById("memoryGrid");
+  const grid =
+    document.getElementById(
+      "memoryGrid"
+    );
 
-  cards.forEach((symbol, index) => {
-    const card = document.createElement("button");
+  cards.forEach(
+    (symbol, index) => {
+      const card =
+        document.createElement(
+          "button"
+        );
 
-    card.dataset.symbol = symbol;
-    card.dataset.index = index;
+      card.type = "button";
 
-    card.textContent = "?";
+      card.dataset.symbol =
+        symbol;
 
-    card.style.height = "75px";
-    card.style.fontSize = "30px";
-    card.style.border = "1px solid #343e66";
-    card.style.borderRadius = "12px";
-    card.style.background = "#070914";
-    card.style.color = "#fff";
-    card.style.cursor = "pointer";
+      card.dataset.index =
+        index;
 
-    card.addEventListener("click", () => {
-      if (
-        locked ||
-        card.classList.contains("matched") ||
-        card === first
-      ) {
-        return;
-      }
+      card.textContent = "?";
 
-      card.textContent = symbol;
+      card.style.height =
+        "75px";
 
-      if (!first) {
-        first = card;
-        return;
-      }
+      card.style.fontSize =
+        "30px";
 
-      second = card;
-      locked = true;
+      card.style.border =
+        "1px solid #343e66";
 
-      if (
-        first.dataset.symbol ===
-        second.dataset.symbol
-      ) {
-        first.classList.add("matched");
-        second.classList.add("matched");
+      card.style.borderRadius =
+        "12px";
 
-        matches++;
+      card.style.background =
+        "#070914";
 
-        first = null;
-        second = null;
-        locked = false;
+      card.style.color =
+        "#fff";
 
-        if (matches === symbols.length) {
-          showScore(matches * 100);
+      card.style.cursor =
+        "pointer";
+
+      card.addEventListener(
+        "click",
+        () => {
+          if (
+            locked ||
+            card.classList.contains(
+              "matched"
+            ) ||
+            card === first
+          ) {
+            return;
+          }
+
+          card.textContent =
+            symbol;
+
+          if (!first) {
+            first = card;
+            return;
+          }
+
+          second = card;
+
+          locked = true;
+
+          if (
+            first.dataset.symbol ===
+            second.dataset.symbol
+          ) {
+            first.classList.add(
+              "matched"
+            );
+
+            second.classList.add(
+              "matched"
+            );
+
+            matches++;
+
+            first = null;
+            second = null;
+            locked = false;
+
+            if (
+              matches ===
+              symbols.length
+            ) {
+              showScore(
+                matches * 100
+              );
+            }
+          } else {
+            const firstCard =
+              first;
+
+            const secondCard =
+              second;
+
+            addTimeout(
+              () => {
+                firstCard.textContent =
+                  "?";
+
+                secondCard.textContent =
+                  "?";
+
+                first = null;
+                second = null;
+                locked = false;
+              },
+              700
+            );
+          }
         }
-      } else {
-        const firstCard = first;
-        const secondCard = second;
+      );
 
-        addTimeout(() => {
-          firstCard.textContent = "?";
-          secondCard.textContent = "?";
-
-          first = null;
-          second = null;
-          locked = false;
-        }, 700);
-      }
-    });
-
-    grid.appendChild(card);
-  });
+      grid.appendChild(card);
+    }
+  );
 }
 
 /* =========================================================
@@ -638,12 +901,18 @@ function startTargetGame() {
     <h2>Target Tap</h2>
 
     <p>
-      Hit the target as many times as possible.
+      Hit the moving target as many
+      times as possible.
     </p>
 
-    <div style="margin:15px;">
+    <div style="
+      margin:15px;
+      text-align:center;
+    ">
       Time:
-      <strong id="targetTime">15</strong>
+      <strong id="targetTime">
+        15
+      </strong>
     </div>
 
     <div
@@ -661,6 +930,7 @@ function startTargetGame() {
 
       <button
         id="targetButton"
+        type="button"
         style="
           position:absolute;
           width:65px;
@@ -678,55 +948,82 @@ function startTargetGame() {
 
     </div>
 
-    <div style="margin-top:20px;">
+    <div style="
+      margin-top:20px;
+      text-align:center;
+    ">
       Score:
-      <strong id="targetScore">0</strong>
+      <strong id="targetScore">
+        0
+      </strong>
     </div>
   `;
 
   const arena =
-    document.getElementById("targetArena");
+    document.getElementById(
+      "targetArena"
+    );
 
   const button =
-    document.getElementById("targetButton");
+    document.getElementById(
+      "targetButton"
+    );
 
   const timeDisplay =
-    document.getElementById("targetTime");
+    document.getElementById(
+      "targetTime"
+    );
 
   const scoreDisplay =
-    document.getElementById("targetScore");
+    document.getElementById(
+      "targetScore"
+    );
 
   function moveTarget() {
     const maxX =
-      Math.max(0, arena.clientWidth - 65);
+      Math.max(
+        0,
+        arena.clientWidth - 65
+      );
 
     const maxY =
-      Math.max(0, arena.clientHeight - 65);
+      Math.max(
+        0,
+        arena.clientHeight - 65
+      );
 
     button.style.left =
-      Math.random() * maxX + "px";
+      Math.random() * maxX +
+      "px";
 
     button.style.top =
-      Math.random() * maxY + "px";
+      Math.random() * maxY +
+      "px";
   }
 
-  button.addEventListener("click", () => {
-    points++;
+  button.addEventListener(
+    "click",
+    () => {
+      points++;
 
-    scoreDisplay.textContent = points;
+      scoreDisplay.textContent =
+        points;
 
-    moveTarget();
-  });
+      moveTarget();
+    }
+  );
 
   moveTarget();
 
   timer = setInterval(() => {
     seconds--;
 
-    timeDisplay.textContent = seconds;
+    timeDisplay.textContent =
+      seconds;
 
     if (seconds <= 0) {
       clearInterval(timer);
+
       timer = null;
 
       showScore(points);
@@ -746,14 +1043,17 @@ function startColorGame() {
       name: "RED",
       value: "#ef4444"
     },
+
     {
       name: "BLUE",
       value: "#3b82f6"
     },
+
     {
       name: "GREEN",
       value: "#22c55e"
     },
+
     {
       name: "YELLOW",
       value: "#eab308"
@@ -768,17 +1068,19 @@ function startColorGame() {
     <h2>Color Switch</h2>
 
     <p>
-      Tap the button that matches the requested color.
+      Tap the button that matches
+      the requested color.
     </p>
 
-    <div
-      style="
-        margin:15px;
-        font-size:22px;
-      "
-    >
+    <div style="
+      margin:15px;
+      font-size:22px;
+      text-align:center;
+    ">
       Time:
-      <strong id="colorTime">20</strong>
+      <strong id="colorTime">
+        20
+      </strong>
     </div>
 
     <div
@@ -787,6 +1089,7 @@ function startColorGame() {
         font-size:30px;
         font-weight:900;
         margin:25px;
+        text-align:center;
       "
     ></div>
 
@@ -799,30 +1102,46 @@ function startColorGame() {
       "
     ></div>
 
-    <div style="margin-top:20px;">
+    <div style="
+      margin-top:20px;
+      text-align:center;
+    ">
       Score:
-      <strong id="colorScore">0</strong>
+      <strong id="colorScore">
+        0
+      </strong>
     </div>
   `;
 
   const question =
-    document.getElementById("colorQuestion");
+    document.getElementById(
+      "colorQuestion"
+    );
 
   const buttons =
-    document.getElementById("colorButtons");
+    document.getElementById(
+      "colorButtons"
+    );
 
   const timeDisplay =
-    document.getElementById("colorTime");
+    document.getElementById(
+      "colorTime"
+    );
 
   const scoreDisplay =
-    document.getElementById("colorScore");
+    document.getElementById(
+      "colorScore"
+    );
 
   function newRound() {
     buttons.innerHTML = "";
 
     correctColor =
       colors[
-        Math.floor(Math.random() * colors.length)
+        Math.floor(
+          Math.random() *
+          colors.length
+        )
       ];
 
     question.textContent =
@@ -835,34 +1154,58 @@ function startColorGame() {
 
     shuffled.forEach(color => {
       const button =
-        document.createElement("button");
+        document.createElement(
+          "button"
+        );
 
-      button.textContent = color.name;
+      button.type = "button";
 
-      button.style.padding = "20px";
-      button.style.border = "0";
-      button.style.borderRadius = "12px";
-      button.style.background = color.value;
-      button.style.color = "#fff";
-      button.style.fontWeight = "900";
-      button.style.cursor = "pointer";
+      button.textContent =
+        color.name;
 
-      button.addEventListener("click", () => {
-        if (
-          color.name ===
-          correctColor.name
-        ) {
-          points++;
-        } else {
-          points =
-            Math.max(0, points - 1);
+      button.style.padding =
+        "20px";
+
+      button.style.border =
+        "0";
+
+      button.style.borderRadius =
+        "12px";
+
+      button.style.background =
+        color.value;
+
+      button.style.color =
+        "#fff";
+
+      button.style.fontWeight =
+        "900";
+
+      button.style.cursor =
+        "pointer";
+
+      button.addEventListener(
+        "click",
+        () => {
+          if (
+            color.name ===
+            correctColor.name
+          ) {
+            points++;
+          } else {
+            points =
+              Math.max(
+                0,
+                points - 1
+              );
+          }
+
+          scoreDisplay.textContent =
+            points;
+
+          newRound();
         }
-
-        scoreDisplay.textContent =
-          points;
-
-        newRound();
-      });
+      );
 
       buttons.appendChild(button);
     });
@@ -873,10 +1216,12 @@ function startColorGame() {
   timer = setInterval(() => {
     seconds--;
 
-    timeDisplay.textContent = seconds;
+    timeDisplay.textContent =
+      seconds;
 
     if (seconds <= 0) {
       clearInterval(timer);
+
       timer = null;
 
       showScore(points);
@@ -885,40 +1230,61 @@ function startColorGame() {
 }
 
 /* =========================================================
-   LOGIN
+   LOGIN BUTTON
    ========================================================= */
 
-function updateLoginButton() {
+async function updateLoginButton() {
   if (!loginBtn) return;
 
   if (!supabaseClient) {
-    loginBtn.textContent = "SIGN IN";
+    loginBtn.textContent =
+      "SIGN IN";
+
     return;
   }
 
-  supabaseClient.auth
-    .getUser()
-    .then(({ data }) => {
-      if (data && data.user) {
-        loginBtn.textContent = "ACCOUNT";
-      } else {
-        loginBtn.textContent = "SIGN IN";
-      }
-    })
-    .catch(() => {
-      loginBtn.textContent = "SIGN IN";
-    });
+  try {
+    const {
+      data,
+      error
+    } =
+      await supabaseClient.auth.getUser();
+
+    if (
+      !error &&
+      data &&
+      data.user
+    ) {
+      loginBtn.textContent =
+        "ACCOUNT";
+    } else {
+      loginBtn.textContent =
+        "SIGN IN";
+    }
+  } catch {
+    loginBtn.textContent =
+      "SIGN IN";
+  }
 }
 
-async function openLogin() {
+/* =========================================================
+   LOGIN / SIGN UP
+   ========================================================= */
+
+function openLogin() {
   if (!supabaseClient) {
-    alert("Supabase is not connected.");
+    alert(
+      "Supabase is not connected."
+    );
+
     return;
   }
 
   clearGameTimers();
 
-  gameModal.classList.remove("hidden");
+  gameModal.classList.remove(
+    "hidden"
+  );
 
   gameArea.innerHTML = `
     <h2>ODDORA Account</h2>
@@ -934,8 +1300,8 @@ async function openLogin() {
       autocomplete="email"
       style="
         width:100%;
-        box-sizing:border-box;
         padding:14px;
+        margin-top:20px;
         margin-bottom:12px;
         border-radius:10px;
         border:1px solid #293253;
@@ -951,7 +1317,6 @@ async function openLogin() {
       autocomplete="current-password"
       style="
         width:100%;
-        box-sizing:border-box;
         padding:14px;
         margin-bottom:15px;
         border-radius:10px;
@@ -961,18 +1326,17 @@ async function openLogin() {
       "
     >
 
-    <div
-      style="
-        display:flex;
-        gap:10px;
-        flex-wrap:wrap;
-        justify-content:center;
-      "
-    >
+    <div style="
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      justify-content:center;
+    ">
 
       <button
         id="signInBtn"
         class="game-action"
+        type="button"
       >
         SIGN IN
       </button>
@@ -980,6 +1344,7 @@ async function openLogin() {
       <button
         id="signUpBtn"
         class="game-action"
+        type="button"
       >
         CREATE ACCOUNT
       </button>
@@ -988,24 +1353,37 @@ async function openLogin() {
 
     <p
       id="loginMessage"
-      style="margin-top:20px;"
+      style="
+        margin-top:20px;
+        text-align:center;
+      "
     ></p>
   `;
 
   const emailInput =
-    document.getElementById("emailInput");
+    document.getElementById(
+      "emailInput"
+    );
 
   const passwordInput =
-    document.getElementById("passwordInput");
+    document.getElementById(
+      "passwordInput"
+    );
 
   const signInBtn =
-    document.getElementById("signInBtn");
+    document.getElementById(
+      "signInBtn"
+    );
 
   const signUpBtn =
-    document.getElementById("signUpBtn");
+    document.getElementById(
+      "signUpBtn"
+    );
 
   const message =
-    document.getElementById("loginMessage");
+    document.getElementById(
+      "loginMessage"
+    );
 
   signInBtn.addEventListener(
     "click",
@@ -1026,7 +1404,9 @@ async function openLogin() {
       message.textContent =
         "Signing in...";
 
-      const { error } =
+      const {
+        error
+      } =
         await supabaseClient.auth
           .signInWithPassword({
             email,
@@ -1043,11 +1423,12 @@ async function openLogin() {
       message.textContent =
         "Signed in successfully.";
 
-      updateLoginButton();
+      await updateLoginButton();
 
-      addTimeout(() => {
-        closeGame();
-      }, 800);
+      addTimeout(
+        closeGame,
+        800
+      );
     }
   );
 
@@ -1077,7 +1458,10 @@ async function openLogin() {
       message.textContent =
         "Creating account...";
 
-      const { data, error } =
+      const {
+        data,
+        error
+      } =
         await supabaseClient.auth
           .signUp({
             email,
@@ -1091,11 +1475,19 @@ async function openLogin() {
         return;
       }
 
-      if (data && data.session) {
+      if (
+        data &&
+        data.session
+      ) {
         message.textContent =
           "Account created successfully.";
 
-        updateLoginButton();
+        await updateLoginButton();
+
+        addTimeout(
+          closeGame,
+          800
+        );
       } else {
         message.textContent =
           "Account created. Check your email if confirmation is required.";
@@ -1114,28 +1506,41 @@ async function accountMenu() {
     return;
   }
 
-  const { data } =
+  const {
+    data,
+    error
+  } =
     await supabaseClient.auth.getUser();
 
-  if (!data || !data.user) {
+  if (
+    error ||
+    !data ||
+    !data.user
+  ) {
     openLogin();
     return;
   }
 
   clearGameTimers();
 
-  gameModal.classList.remove("hidden");
+  gameModal.classList.remove(
+    "hidden"
+  );
 
   gameArea.innerHTML = `
     <h2>ODDORA Account</h2>
 
-    <p>
+    <p style="
+      word-break:break-word;
+      margin:20px 0;
+    ">
       ${escapeHtml(data.user.email)}
     </p>
 
     <button
       id="logoutBtn"
       class="game-action"
+      type="button"
     >
       SIGN OUT
     </button>
@@ -1146,31 +1551,36 @@ async function accountMenu() {
     .addEventListener(
       "click",
       async () => {
-        await supabaseClient.auth.signOut();
+        const {
+          error
+        } =
+          await supabaseClient.auth
+            .signOut();
 
-        updateLoginButton();
+        if (error) {
+          alert(error.message);
+          return;
+        }
+
+        await updateLoginButton();
 
         closeGame();
       }
     );
 }
 
-function escapeHtml(value) {
-  const div = document.createElement("div");
-
-  div.textContent = value;
-
-  return div.innerHTML;
-}
-
 /* =========================================================
    SAVE SCORE
    ========================================================= */
 
-async function saveScore(finalScore) {
-  if (!currentGame) return;
+async function saveScore(
+  finalScore,
+  game
+) {
+  if (!game) return;
 
-  const gameId = currentGame.id;
+  const gameId =
+    game.id;
 
   const localKey =
     `oddora_${gameId}_scores`;
@@ -1180,7 +1590,9 @@ async function saveScore(finalScore) {
   try {
     localScores =
       JSON.parse(
-        localStorage.getItem(localKey)
+        localStorage.getItem(
+          localKey
+        )
       ) || [];
   } catch {
     localScores = [];
@@ -1188,55 +1600,82 @@ async function saveScore(finalScore) {
 
   localScores.push({
     score: finalScore,
-    date: new Date().toISOString()
+    date:
+      new Date().toISOString()
   });
 
   localScores.sort(
-    (a, b) => b.score - a.score
+    (a, b) =>
+      Number(b.score) -
+      Number(a.score)
   );
 
   localScores =
-    localScores.slice(0, 10);
+    localScores.slice(0, 20);
 
-  localStorage.setItem(
-    localKey,
-    JSON.stringify(localScores)
-  );
+  try {
+    localStorage.setItem(
+      localKey,
+      JSON.stringify(
+        localScores
+      )
+    );
+  } catch (error) {
+    console.log(
+      "Local score save error:",
+      error
+    );
+  }
 
-  /*
-    Optional Supabase leaderboard.
+  if (!supabaseClient) {
+    loadLeaderboard();
+    return;
+  }
 
-    This will only work if the appropriate
-    table/policies have been created in Supabase.
-  */
+  try {
+    const {
+      data,
+      error
+    } =
+      await supabaseClient.auth
+        .getUser();
 
-  if (supabaseClient) {
-    try {
-      const { data } =
-        await supabaseClient.auth.getUser();
-
-      if (data && data.user) {
+    if (
+      !error &&
+      data &&
+      data.user
+    ) {
+      const result =
         await supabaseClient
           .from("scores")
           .insert({
-            user_id: data.user.id,
-            game_id: gameId,
-            score: finalScore
+            user_id:
+              data.user.id,
+            game_id:
+              gameId,
+            score:
+              finalScore
           });
+
+      if (result.error) {
+        console.log(
+          "Online score error:",
+          result.error.message
+        );
       }
-    } catch (error) {
-      console.log(
-        "Online score not saved:",
-        error
-      );
     }
+  } catch (error) {
+    console.log(
+      "Online score unavailable:",
+      error
+    );
   }
 
   loadLeaderboard();
 }
 
 /* =========================================================
-   LEADERBOARD
+   LOCAL LEADERBOARD
    ========================================================= */
 
 function getLocalLeaderboard() {
@@ -1251,7 +1690,9 @@ function getLocalLeaderboard() {
     try {
       scores =
         JSON.parse(
-          localStorage.getItem(key)
+          localStorage.getItem(
+            key
+          )
         ) || [];
     } catch {
       scores = [];
@@ -1259,26 +1700,45 @@ function getLocalLeaderboard() {
 
     scores.forEach(item => {
       allScores.push({
-        game: game.name,
-        icon: game.icon,
-        score: Number(item.score) || 0,
-        date: item.date
+        game:
+          game.name,
+
+        icon:
+          game.icon,
+
+        score:
+          Number(item.score) || 0,
+
+        date:
+          item.date
       });
     });
   });
 
   allScores.sort(
-    (a, b) => b.score - a.score
+    (a, b) =>
+      b.score - a.score
   );
 
-  return allScores.slice(0, 10);
+  return allScores.slice(
+    0,
+    10
+  );
 }
+
+/* =========================================================
+   LEADERBOARD
+   ========================================================= */
 
 async function loadLeaderboard() {
   if (!leaderboardBox) return;
 
   leaderboardBox.innerHTML = `
-    <div style="padding:20px;text-align:center;">
+    <div style="
+      padding:20px;
+      text-align:center;
+      color:#9da4bd;
+    ">
       Loading scores...
     </div>
   `;
@@ -1293,56 +1753,72 @@ async function loadLeaderboard() {
           .select(
             "game_id, score, created_at"
           )
-          .order("score", {
-            ascending: false
-          })
+          .order(
+            "score",
+            {
+              ascending:false
+            }
+          )
           .limit(10);
 
       if (
         !result.error &&
-        Array.isArray(result.data)
+        Array.isArray(
+          result.data
+        )
       ) {
         scores =
-          result.data.map(item => {
-            const game =
-              games.find(
-                g =>
-                  g.id === item.game_id
-              );
+          result.data.map(
+            item => {
+              const game =
+                games.find(
+                  g =>
+                    g.id ===
+                    item.game_id
+                );
 
-            return {
-              game:
-                game?.name ||
-                item.game_id,
-              icon:
-                game?.icon ||
-                "🎮",
-              score:
-                Number(item.score) || 0,
-              date:
-                item.created_at
-            };
-          });
+              return {
+                game:
+                  game?.name ||
+                  item.game_id,
+
+                icon:
+                  game?.icon ||
+                  "🎮",
+
+                score:
+                  Number(
+                    item.score
+                  ) || 0,
+
+                date:
+                  item.created_at
+              };
+            }
+          );
       }
     } catch (error) {
       console.log(
-        "Online leaderboard unavailable."
+        "Leaderboard error:",
+        error
       );
     }
   }
 
-  if (scores.length === 0) {
-    scores = getLocalLeaderboard();
+  if (!scores.length) {
+    scores =
+      getLocalLeaderboard();
   }
 
-  if (scores.length === 0) {
+  if (!scores.length) {
     leaderboardBox.innerHTML = `
       <div style="
         text-align:center;
-        padding:25px;
-        opacity:.7;
+        padding:30px;
+        color:#9da4bd;
       ">
-        No scores yet.<br>
+        No scores yet.
+        <br>
         Play a game to create the first score.
       </div>
     `;
@@ -1353,7 +1829,7 @@ async function loadLeaderboard() {
   leaderboardBox.innerHTML =
     scores
       .map(
-        (item, index) => `
+        (item,index) => `
           <div style="
             display:flex;
             align-items:center;
@@ -1363,21 +1839,24 @@ async function loadLeaderboard() {
           ">
 
             <strong style="
-              width:30px;
+              width:28px;
             ">
               ${index + 1}
             </strong>
 
             <span style="
-              font-size:24px;
+              font-size:23px;
             ">
               ${item.icon}
             </span>
 
             <span style="
               flex:1;
+              color:#dce1f4;
             ">
-              ${escapeHtml(item.game)}
+              ${escapeHtml(
+                item.game
+              )}
             </span>
 
             <strong>
@@ -1405,7 +1884,10 @@ if (gameModal) {
   gameModal.addEventListener(
     "click",
     event => {
-      if (event.target === gameModal) {
+      if (
+        event.target ===
+        gameModal
+      ) {
         closeGame();
       }
     }
@@ -1415,7 +1897,9 @@ if (gameModal) {
 document.addEventListener(
   "keydown",
   event => {
-    if (event.key === "Escape") {
+    if (
+      event.key === "Escape"
+    ) {
       closeGame();
     }
   }
@@ -1440,7 +1924,9 @@ if (search) {
             .includes(value)
         );
 
-      renderGames(filtered);
+      renderGames(
+        filtered
+      );
     }
   );
 }
@@ -1454,10 +1940,16 @@ if (loginBtn) {
         return;
       }
 
-      const { data } =
-        await supabaseClient.auth.getUser();
+      const {
+        data
+      } =
+        await supabaseClient.auth
+          .getUser();
 
-      if (data && data.user) {
+      if (
+        data &&
+        data.user
+      ) {
         accountMenu();
       } else {
         openLogin();
@@ -1465,6 +1957,10 @@ if (loginBtn) {
     }
   );
 }
+
+/* =========================================================
+   SUPABASE AUTH LISTENER
+   ========================================================= */
 
 if (supabaseClient) {
   supabaseClient.auth.onAuthStateChange(
@@ -1475,11 +1971,13 @@ if (supabaseClient) {
 }
 
 /* =========================================================
-   STARTUP
+   START
    ========================================================= */
 
 renderGames();
+
 updateLoginButton();
+
 loadLeaderboard();
 
 console.log(
