@@ -3,7 +3,7 @@ const games = [
     id: "reaction",
     name: "Reaction Rush",
     icon: "⚡",
-    description: "Click as soon as the target appears."
+    description: "Test your reaction speed across 10 rounds."
   },
   {
     id: "click",
@@ -136,7 +136,10 @@ search.addEventListener("input", () => {
 
 function saveScore(gameName, score) {
 
-  score = Math.max(0, Math.floor(score));
+  score = Math.max(
+    0,
+    Math.floor(score)
+  );
 
   if (
     !scores[gameName] ||
@@ -153,7 +156,6 @@ function saveScore(gameName, score) {
   }
 
   renderLeaderboard();
-
 }
 
 
@@ -177,7 +179,6 @@ function renderLeaderboard() {
     `;
 
     return;
-
   }
 
   leaderboardBox.innerHTML = "";
@@ -219,17 +220,6 @@ function openGame(id) {
 
   modal.classList.remove("hidden");
 
-  gameArea.innerHTML = `
-    <h2>
-      ${game.icon} ${game.name}
-    </h2>
-
-    <p>
-      ${game.description}
-    </p>
-  `;
-
-
   if (id === "reaction") {
 
     reactionGame();
@@ -250,7 +240,7 @@ function openGame(id) {
 
   else {
 
-    demoGame(game.name);
+    demoGame(game);
 
   }
 
@@ -264,7 +254,9 @@ function openGame(id) {
 closeModal.addEventListener(
   "click",
   () => {
+
     modal.classList.add("hidden");
+
   }
 );
 
@@ -283,123 +275,396 @@ modal.addEventListener(
 );
 
 
-/* =========================
-   REACTION GAME
-========================= */
+/* =========================================================
+   REACTION RUSH
+========================================================= */
 
 function reactionGame() {
 
-  gameArea.innerHTML = `
+  let round = 0;
 
-    <h2>
-      ⚡ Reaction Rush
-    </h2>
+  let totalScore = 0;
 
-    <p>
-      Wait for the button to turn green.
-      Then click immediately.
-    </p>
+  let bestReaction = null;
 
-    <button
-      id="reactionButton"
-      class="game-action"
-    >
-      WAIT...
-    </button>
+  let gameRunning = false;
 
-    <div
-      id="reactionScore"
-      class="big-score"
-    >
-      —
-    </div>
+  let targetTimer = null;
 
-  `;
-
-  const button =
-    document.getElementById(
-      "reactionButton"
-    );
-
-  const score =
-    document.getElementById(
-      "reactionScore"
-    );
-
-  let ready = false;
-
-  let startTime = 0;
-
-  button.style.background = "#555";
-
-  const delay =
-    1000 + Math.random() * 3000;
+  let reactionStart = 0;
 
 
-  setTimeout(() => {
+  function startScreen() {
 
-    ready = true;
+    gameArea.innerHTML = `
 
-    startTime = Date.now();
+      <h2>
+        ⚡ Reaction Rush
+      </h2>
 
-    button.textContent =
-      "CLICK NOW";
+      <p>
+        Complete 10 rounds.
+        Wait for the target and tap it as quickly
+        as possible.
+      </p>
 
-    button.style.background =
-      "#20b66b";
+      <button
+        id="startReaction"
+        class="game-action"
+      >
+        START GAME
+      </button>
 
-  }, delay);
+      <div
+        style="
+          margin-top:20px;
+          color:#9da7c8;
+        "
+      >
+        Best score:
+        <strong>
+          ${scores["Reaction Rush"] || 0}
+        </strong>
+      </div>
+
+    `;
 
 
-  button.onclick = () => {
+    document
+      .getElementById("startReaction")
+      .onclick = startRound;
 
-    if (!ready) {
+  }
 
-      score.textContent =
-        "Too early!";
 
-      return;
+  function startRound() {
+
+    round++;
+
+    gameRunning = false;
+
+    gameArea.innerHTML = `
+
+      <h2>
+        ⚡ Reaction Rush
+      </h2>
+
+      <p>
+        Round ${round} / 10
+      </p>
+
+      <div
+        id="reactionArena"
+        style="
+          position:relative;
+          height:300px;
+          margin-top:20px;
+          border-radius:18px;
+          border:1px solid #303a61;
+          background:#080c19;
+          overflow:hidden;
+        "
+      >
+
+        <div
+          id="reactionMessage"
+          style="
+            position:absolute;
+            inset:0;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            color:#aab4d4;
+            font-weight:800;
+          "
+        >
+          WAIT...
+        </div>
+
+      </div>
+
+      <div
+        id="reactionInfo"
+        style="
+          margin-top:18px;
+          color:#9da7c8;
+        "
+      >
+        Get ready...
+      </div>
+
+    `;
+
+
+    const arena =
+      document.getElementById(
+        "reactionArena"
+      );
+
+
+    const message =
+      document.getElementById(
+        "reactionMessage"
+      );
+
+
+    const info =
+      document.getElementById(
+        "reactionInfo"
+      );
+
+
+    const delay =
+      900 +
+      Math.random() * 2600;
+
+
+    targetTimer =
+      setTimeout(() => {
+
+        if (!gameRunning) {
+
+          gameRunning = true;
+
+          reactionStart =
+            performance.now();
+
+
+          message.remove();
+
+
+          const target =
+            document.createElement("button");
+
+
+          target.id =
+            "reactionTarget";
+
+
+          target.textContent =
+            "TAP!";
+
+
+          target.style.position =
+            "absolute";
+
+
+          target.style.width =
+            "82px";
+
+
+          target.style.height =
+            "82px";
+
+
+          target.style.borderRadius =
+            "50%";
+
+
+          target.style.border =
+            "0";
+
+
+          target.style.background =
+            "#695cff";
+
+
+          target.style.color =
+            "#ffffff";
+
+
+          target.style.fontWeight =
+            "900";
+
+
+          target.style.cursor =
+            "pointer";
+
+
+          target.style.left =
+            Math.random() *
+              (arena.clientWidth - 100)
+            + "px";
+
+
+          target.style.top =
+            Math.random() *
+              (arena.clientHeight - 100)
+            + "px";
+
+
+          arena.appendChild(target);
+
+
+          info.textContent =
+            "TAP THE TARGET!";
+
+
+          target.onclick =
+            finishRound;
+
+
+        }
+
+      }, delay);
+
+
+    arena.onclick = event => {
+
+      if (
+        gameRunning &&
+        event.target === arena
+      ) {
+
+        finishRound();
+
+      }
+
+    };
+
+
+    function finishRound() {
+
+      if (!gameRunning) {
+
+        clearTimeout(targetTimer);
+
+        info.textContent =
+          "Too early! Wait for the target.";
+
+        setTimeout(
+          startRound,
+          900
+        );
+
+        return;
+
+      }
+
+
+      gameRunning = false;
+
+
+      const reaction =
+        Math.round(
+          performance.now() -
+          reactionStart
+        );
+
+
+      if (
+        bestReaction === null ||
+        reaction < bestReaction
+      ) {
+
+        bestReaction =
+          reaction;
+
+      }
+
+
+      const points =
+        Math.max(
+          50,
+          1000 - reaction
+        );
+
+
+      totalScore += points;
+
+
+      info.textContent =
+        reaction +
+        " ms  •  +" +
+        points +
+        " points";
+
+
+      if (round >= 10) {
+
+        finishGame();
+
+        return;
+
+      }
+
+
+      setTimeout(
+        startRound,
+        1000
+      );
 
     }
 
-    const reaction =
-      Date.now() - startTime;
+  }
 
-    score.textContent =
-      reaction + " ms";
 
-    const points =
-      Math.max(
-        1,
-        1000 - reaction
-      );
+  function finishGame() {
 
     saveScore(
       "Reaction Rush",
-      points
+      totalScore
     );
 
-    button.textContent =
-      "PLAY AGAIN";
 
-    button.style.background =
-      "#695cff";
+    gameArea.innerHTML = `
 
-    ready = false;
+      <h2>
+        ⚡ Game Complete
+      </h2>
 
-    button.onclick =
-      () => reactionGame();
+      <p>
+        You completed all 10 rounds.
+      </p>
 
-  };
+      <div
+        class="big-score"
+      >
+        ${totalScore}
+      </div>
+
+      <p>
+        Best reaction:
+        <strong>
+          ${bestReaction} ms
+        </strong>
+      </p>
+
+      <button
+        id="reactionAgain"
+        class="game-action"
+      >
+        PLAY AGAIN
+      </button>
+
+    `;
+
+
+    document
+      .getElementById("reactionAgain")
+      .onclick =
+      reactionGame;
+
+  }
+
+
+  startScreen();
 
 }
 
 
-/* =========================
+/* =========================================================
    CLICK STORM
-========================= */
+========================================================= */
 
 function clickGame() {
+
+  let clicks = 0;
+
+  let running = false;
+
+  let endTime = 0;
+
 
   gameArea.innerHTML = `
 
@@ -408,7 +673,7 @@ function clickGame() {
     </h2>
 
     <p>
-      Click as many times as possible
+      Make as many clicks as possible
       in 10 seconds.
     </p>
 
@@ -428,21 +693,17 @@ function clickGame() {
 
   `;
 
+
   const button =
     document.getElementById(
       "clickButton"
     );
 
+
   const display =
     document.getElementById(
       "clickScore"
     );
-
-  let clicks = 0;
-
-  let running = false;
-
-  let endTime = 0;
 
 
   button.onclick = () => {
@@ -517,9 +778,9 @@ function clickGame() {
 }
 
 
-/* =========================
+/* =========================================================
    QUICK MATH
-========================= */
+========================================================= */
 
 function mathGame() {
 
@@ -535,10 +796,16 @@ function mathGame() {
 
     if (round > 10) {
 
+      saveScore(
+        "Quick Math",
+        points
+      );
+
+
       gameArea.innerHTML = `
 
         <h2>
-          Finished!
+          ➗ Finished!
         </h2>
 
         <div class="big-score">
@@ -546,22 +813,20 @@ function mathGame() {
         </div>
 
         <button
-          class="game-action"
           id="mathAgain"
+          class="game-action"
         >
           PLAY AGAIN
         </button>
 
       `;
 
-      saveScore(
-        "Quick Math",
-        points
-      );
 
       document
         .getElementById("mathAgain")
-        .onclick = mathGame;
+        .onclick =
+        mathGame;
+
 
       return;
 
@@ -573,10 +838,12 @@ function mathGame() {
         Math.random() * 20
       ) + 1;
 
+
     const b =
       Math.floor(
         Math.random() * 20
       ) + 1;
+
 
     const answer =
       a + b;
@@ -628,6 +895,7 @@ function mathGame() {
         "mathAnswer"
       );
 
+
     const submit =
       document.getElementById(
         "mathSubmit"
@@ -678,28 +946,28 @@ function mathGame() {
 }
 
 
-/* =========================
+/* =========================================================
    OTHER GAMES
-========================= */
+========================================================= */
 
-function demoGame(name) {
+function demoGame(game) {
 
   gameArea.innerHTML = `
 
     <h2>
-      Game Preview
+      ${game.icon}
+      ${game.name}
     </h2>
 
     <p>
-      ${name} is included in
-      the ODDORA arcade.
+      This game is part of the ODDORA arcade.
     </p>
 
     <button
-      class="game-action"
       id="demoButton"
+      class="game-action"
     >
-      START DEMO
+      START
     </button>
 
   `;
@@ -709,7 +977,11 @@ function demoGame(name) {
     .getElementById("demoButton")
     .onclick = () => {
 
-      saveScore(name, 1);
+      saveScore(
+        game.name,
+        1
+      );
+
 
       gameArea.innerHTML = `
 
@@ -722,22 +994,31 @@ function demoGame(name) {
         </div>
 
         <button
+          id="demoAgain"
           class="game-action"
-          onclick="openGame('${games.find(g => g.name === name)?.id}')"
         >
           PLAY AGAIN
         </button>
 
       `;
 
+
+      document
+        .getElementById("demoAgain")
+        .onclick = () => {
+
+          openGame(game.id);
+
+        };
+
     };
 
 }
 
 
-/* =========================
-   LOGIN PLACEHOLDER
-========================= */
+/* =========================================================
+   LOGIN
+========================================================= */
 
 loginBtn.addEventListener(
   "click",
@@ -751,9 +1032,9 @@ loginBtn.addEventListener(
 );
 
 
-/* =========================
+/* =========================================================
    START
-========================= */
+========================================================= */
 
 renderGames();
 
