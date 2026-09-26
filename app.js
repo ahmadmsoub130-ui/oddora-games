@@ -1106,11 +1106,63 @@ function colorSwitch() {
    LOGIN
 ========================= */
 
-loginBtn.addEventListener("click", () => {
-  alert(
-    "ODDORA account system will be connected to a real database in the next stage."
-  );
+loginBtn.addEventListener("click", async () => {
+  const email = prompt("Enter your email:");
+
+  if (!email) return;
+
+  const password = prompt("Enter your password:");
+
+  if (!password) return;
+
+  const { data, error } = await supabaseClient.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if (error) {
+    const createAccount = confirm(
+      "Account not found. Do you want to create a new account?"
+    );
+
+    if (!createAccount) return;
+
+    const { error: signupError } =
+      await supabaseClient.auth.signUp({
+        email,
+        password
+      });
+
+    if (signupError) {
+      alert(signupError.message);
+      return;
+    }
+
+    alert(
+      "Account created successfully. Check your email if confirmation is required."
+    );
+
+    return;
+  }
+
+  alert("Welcome to ODDORA!");
+
+  updateLoginButton();
 });
+
+async function updateLoginButton() {
+  const {
+    data: { user }
+  } = await supabaseClient.auth.getUser();
+
+  if (user) {
+    loginBtn.textContent = "ACCOUNT";
+  } else {
+    loginBtn.textContent = "SIGN IN";
+  }
+}
+
+updateLoginButton();
 
 /* =========================
    START
