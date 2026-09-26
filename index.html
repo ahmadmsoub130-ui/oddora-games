@@ -2,142 +2,243 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>ODDORA Games</title>
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
 
-  <meta name="description" content="ODDORA Games - Play fast browser games, challenge yourself and save your scores.">
+  <title>ODDORA Games — Play. Compete. Repeat.</title>
 
-  <link rel="stylesheet" href="styles.css">
+  <meta
+    name="description"
+    content="ODDORA Games — fast, fun browser games for mobile and desktop."
+  >
+
+  <meta
+    name="theme-color"
+    content="#060711"
+  >
+
+  <meta
+    name="robots"
+    content="index, follow"
+  >
+
+  <link
+    rel="stylesheet"
+    href="styles.css"
+  >
 </head>
 
 <body>
 
-<header class="topbar">
+  <!-- =====================================================
+       HEADER
+       ===================================================== -->
 
-  <a href="#" class="logo">ODDORA</a>
+  <header class="topbar">
 
-  <nav>
-    <a href="#games">Games</a>
-    <a href="#leaderboard">Leaderboard</a>
-    <button id="loginBtn">Sign In</button>
-  </nav>
+    <a
+      href="#top"
+      class="logo"
+      aria-label="ODDORA Games home"
+    >
+      ODDORA
+    </a>
 
-</header>
+    <nav aria-label="Main navigation">
 
-
-<main>
-
-  <section class="hero">
-
-    <div class="hero-content">
-
-      <div class="eyebrow">
-        ODDORA GAMES
-      </div>
-
-      <h1>
-        PLAY.<br>
-        COMPETE.<br>
-        REPEAT.
-      </h1>
-
-      <p>
-        Fast browser games built for mobile and desktop.
-        Play challenges, collect scores and compete.
-      </p>
-
-      <a href="#games" class="hero-button">
-        START PLAYING
+      <a href="#games">
+        Games
       </a>
 
-    </div>
+      <a href="#leaderboard">
+        Leaderboard
+      </a>
 
-  </section>
+      <button
+        id="loginBtn"
+        type="button"
+      >
+        SIGN IN
+      </button>
+
+    </nav>
+
+  </header>
 
 
-  <section id="games" class="section">
+  <!-- =====================================================
+       MAIN
+       ===================================================== -->
 
-    <div class="section-header">
+  <main id="top">
 
-      <div>
-        <div class="eyebrow">GAME ARCADE</div>
+    <!-- HERO -->
 
-        <h2>
-          Featured Games
-        </h2>
+    <section class="hero">
+
+      <div class="hero-content">
+
+        <div class="eyebrow">
+          ODDORA GAMES
+        </div>
+
+        <h1>
+          PLAY.<br>
+          COMPETE.<br>
+          REPEAT.
+        </h1>
+
+        <p>
+          Fast browser games built for mobile and desktop.
+          Play challenges, collect scores and compete.
+        </p>
+
+        <a
+          href="#games"
+          class="hero-button"
+        >
+          START PLAYING
+        </a>
+
       </div>
 
-      <input
-        id="search"
-        type="text"
-        placeholder="Search games..."
-      >
-
-    </div>
+    </section>
 
 
-    <div id="gameGrid" class="game-grid"></div>
+    <!-- =================================================
+         GAMES
+         ================================================= -->
 
-  </section>
-
-
-  <section id="leaderboard" class="section">
-
-    <div class="eyebrow">
-      SCORES
-    </div>
-
-    <h2>
-      Leaderboard
-    </h2>
-
-    <div
-      id="leaderboardBox"
-      class="leaderboard"
-    ></div>
-
-  </section>
-
-</main>
-
-
-<footer>
-
-  <div class="footer-logo">
-    ODDORA
-  </div>
-
-  <p>
-    © 2026 ODDORA Games
-  </p>
-
-</footer>
-
-
-<div
-  id="gameModal"
-  class="modal hidden"
->
-
-  <div class="modal-box">
-
-    <button
-      id="closeModal"
-      class="close"
+    <section
+      id="games"
+      class="section"
     >
-      ×
-    </button>
 
-    <div id="gameArea"></div>
+      <div class="section-header">
+
+        <div>
+
+          <div class="eyebrow">
+            GAME ARCADE
+          </div>
+
+          <h2>
+            Featured Games
+          </h2>
+
+        </div>
+
+        <input
+          id="search"
+          type="search"
+          placeholder="Search games..."
+          autocomplete="off"
+          aria-label="Search games"
+        >
+
+      </div>
+
+
+      <div
+        id="gameGrid"
+        class="game-grid"
+      ></div>
+
+    </section>
+
+
+    <!-- =================================================
+         LEADERBOARD
+         ================================================= -->
+
+    <section
+      id="leaderboard"
+      class="section"
+    >
+
+      <div class="eyebrow">
+        SCORES
+      </div>
+
+      <h2>
+        Leaderboard
+      </h2>
+
+      <div
+        id="leaderboardBox"
+        class="leaderboard"
+        aria-live="polite"
+      ></div>
+
+    </section>
+
+  </main>
+
+
+  <!-- =====================================================
+       FOOTER
+       ===================================================== -->
+
+  <footer>
+
+    <div class="footer-logo">
+      ODDORA
+    </div>
+
+    <p>
+      © 2026 ODDORA Games
+    </p>
+
+  </footer>
+
+
+  <!-- =====================================================
+       GAME MODAL
+       ===================================================== -->
+
+  <div
+    id="gameModal"
+    class="modal hidden"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Game window"
+  >
+
+    <div class="modal-box">
+
+      <button
+        id="closeModal"
+        class="close"
+        type="button"
+        aria-label="Close"
+      >
+        ×
+      </button>
+
+      <div id="gameArea"></div>
+
+    </div>
 
   </div>
 
-</div>
+
+  <!-- =====================================================
+       SUPABASE
+       ===================================================== -->
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+  ></script>
 
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="app.js"></script>
+  <!-- =====================================================
+       ODDORA APP
+       ===================================================== -->
+
+  <script src="app.js"></script>
 
 </body>
 </html>
